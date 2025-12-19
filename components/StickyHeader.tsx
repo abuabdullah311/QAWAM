@@ -23,34 +23,37 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics, onR
     <div className="sticky-header bg-white/95 border-b border-gray-200 shadow-sm py-2 px-4 mb-6 backdrop-blur-md transition-all duration-300">
       <div className="max-w-4xl mx-auto">
         
-        {/* Top Row: Date & Version & Reset */}
-        <div className="flex justify-between items-center text-[10px] text-gray-400 mb-1 px-1">
-          <span>{today}</span>
-          <div className="flex items-center gap-3">
+        {/* Top Row: Date | Ayah | Version & Reset */}
+        <div className="flex justify-between items-center mb-2 px-1 gap-2">
+          
+          {/* Left: Date */}
+          <div className="text-[10px] text-gray-400 min-w-[80px]">
+            <span className="hidden sm:inline">{today}</span>
+            <span className="sm:hidden">{new Date().toLocaleDateString('ar-SA')}</span>
+          </div>
+
+          {/* Center: Ayah (Always Visible) */}
+          <div className="flex-1 text-center">
+             <span className="font-diwani text-emerald-700 text-sm md:text-lg block leading-tight">
+               ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
+               <span className="font-sans text-[10px] md:text-xs text-emerald-600 mr-2 opacity-80">[الفرقان: 67]</span>
+             </span>
+          </div>
+
+          {/* Right: Controls */}
+          <div className="flex items-center justify-end gap-3 min-w-[80px]">
              <button 
                onClick={onReset}
                className="flex items-center gap-1 text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-0.5 rounded transition-all group"
                title="حذف البيانات والبدء من جديد"
                data-html2canvas-ignore
              >
-               <RotateCcw size={10} className="group-hover:-rotate-180 transition-transform duration-500" />
-               <span>إعادة تعيين</span>
+               <RotateCcw size={12} className="group-hover:-rotate-180 transition-transform duration-500" />
+               <span className="text-[10px] hidden sm:inline">إعادة تعيين</span>
              </button>
-             <span className="font-mono bg-gray-100 px-2 rounded-full">v1.1</span>
+             <span className="text-[10px] text-gray-400 font-mono bg-gray-100 px-2 rounded-full">v1.2</span>
           </div>
         </div>
-
-        {/* Quranic Verse */}
-        {salary === 0 && (
-          <div className="text-center mb-2 pb-2 border-b border-slate-100 fade-in">
-             <div className="text-emerald-700 leading-relaxed">
-               <span className="font-diwani text-xl md:text-2xl block mb-1">
-                 ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
-               </span>
-               <span className="text-xs text-emerald-600/80 block mt-1">سورة الفرقان - الآية 67</span>
-             </div>
-          </div>
-        )}
 
         <div className="flex flex-col items-center gap-3">
           
@@ -59,7 +62,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics, onR
             <img 
               src="./QAWAM_logo.png" 
               alt="QAWAM" 
-              className="h-12 md:h-14 object-contain"
+              className="h-10 md:h-12 object-contain"
             />
           </div>
           
