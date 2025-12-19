@@ -55,7 +55,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
 
           {/* Version (Right - No Reset Button) */}
           <div className="w-32 flex justify-end">
-             <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded-full">v1.2</span>
+             <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded-full">v1.3</span>
           </div>
         </div>
 
@@ -144,7 +144,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
         <table className="w-full text-right border-collapse text-sm">
           <thead>
             <tr className="bg-gray-100 text-gray-700">
-              <th className="p-2 border border-gray-200 text-xs">المصرف</th>
+              <th className="p-2 border border-gray-200 text-xs">المصروف</th>
               <th className="p-2 border border-gray-200 text-xs w-24">النوع</th>
               <th className="p-2 border border-gray-200 text-xs w-24">المبلغ</th>
               <th className="p-2 border border-gray-200 text-xs w-16">النسبة</th>

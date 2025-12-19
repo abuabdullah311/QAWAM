@@ -51,7 +51,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics, onR
                <RotateCcw size={12} className="group-hover:-rotate-180 transition-transform duration-500" />
                <span className="text-[10px] hidden sm:inline">إعادة تعيين</span>
              </button>
-             <span className="text-[10px] text-gray-400 font-mono bg-gray-100 px-2 rounded-full">v1.2</span>
+             <span className="text-[10px] text-gray-400 font-mono bg-gray-100 px-2 rounded-full">v1.3</span>
           </div>
         </div>
 

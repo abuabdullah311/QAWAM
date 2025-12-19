@@ -34,7 +34,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
       <table className="w-full text-sm text-right">
         <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
           <tr>
-            <th className="px-4 py-3">اسم المصرف</th>
+            <th className="px-4 py-3">اسم المصروف</th>
             <th className="px-4 py-3">النوع</th>
             <th className="px-4 py-3">المبلغ</th>
             <th className="px-4 py-3">النسبة</th>
@@ -46,7 +46,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
           {expenses.length === 0 ? (
             <tr>
               <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                لا توجد مصارف مضافة حالياً.
+                لا توجد مصروفات مضافة حالياً.
               </td>
             </tr>
           ) : (

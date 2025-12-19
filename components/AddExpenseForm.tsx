@@ -77,9 +77,9 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
       let generatedAdvice = "";
 
       if (wantsPct > 30 && largestWant) {
-        generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}% بينما الموصى به 30%). لإتاحة المجال لهذا المصرف، نقترح عليك تقليل بند "${largestWant.name}" بمقدار ${deficit.toLocaleString()}.`;
+        generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}% بينما الموصى به 30%). لإتاحة المجال لهذا المصروف، نقترح عليك تقليل بند "${largestWant.name}" بمقدار ${deficit.toLocaleString()}.`;
       } else if (largestWant) {
-        generatedAdvice = `توصية الخبير: لإضافة هذا المصرف، ابدأ بتقليل الكماليات. هل يمكنك تخفيض بند "${largestWant.name}"؟`;
+        generatedAdvice = `توصية الخبير: لإضافة هذا المصروف، ابدأ بتقليل الكماليات. هل يمكنك تخفيض بند "${largestWant.name}"؟`;
       } else if (largestNeed) {
          generatedAdvice = `توصية الخبير: ميزانيتك مضغوطة جداً وتتكون معظمها من احتياجات. راجع بند "${largestNeed.name}" إن كان يمكن استبداله ببديل أقل تكلفة لتوفير ${deficit.toLocaleString()}.`;
       } else {
@@ -126,23 +126,31 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6">
-      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-        {editingExpense ? <Edit2Icon /> : <PlusCircleIcon />}
-        {editingExpense ? 'تعديل المصرف' : 'إضافة مصرف جديد'}
-      </h3>
+    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl">
+      <div className="flex justify-between items-center mb-6 pb-2 border-b border-gray-100">
+        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+          {editingExpense ? <Edit2Icon /> : <PlusCircleIcon />}
+          {editingExpense ? 'تعديل المصروف' : 'إضافة مصروف جديد'}
+        </h3>
+        <button 
+          onClick={onCancelEdit}
+          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <X size={24} />
+        </button>
+      </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           
           {/* Name Input with Helper Select */}
           <div className="flex flex-col gap-2">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">اسم المصرف</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">اسم المصروف</label>
               
               <select 
                 onChange={handleSuggestionSelect}
-                className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none"
+                className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none cursor-pointer"
                 defaultValue=""
               >
                 <option value="" disabled>↓ اختر من القائمة المقترحة</option>
@@ -158,6 +166,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 placeholder="أو اكتب الاسم هنا..."
                 required
+                autoFocus={!editingExpense}
               />
             </div>
           </div>
@@ -182,7 +191,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
             <select
               value={type}
               onChange={(e) => setType(e.target.value as ExpenseType)}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white mt-[29px] ${getTypeColorClass(type)}`}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white md:mt-[29px] ${getTypeColorClass(type)}`}
             >
               {EXPENSE_TYPES.map(t => (
                 <option key={t} value={t} className={getTypeColorClass(t)}>{t}</option>
@@ -197,7 +206,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all mt-[29px]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all md:mt-[29px]"
               placeholder="اختياري"
             />
           </div>
@@ -216,23 +225,20 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-2">
-           {editingExpense && (
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={onCancelEdit}
               className="px-6 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
             >
-              <X size={18} />
               إلغاء
             </button>
-          )}
           <button
             type="submit"
             className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition-colors flex items-center gap-2"
           >
             {editingExpense ? <Save size={18} /> : <PlusCircle size={18} />}
-            {editingExpense ? 'حفظ التعديلات' : 'إضافة المصرف'}
+            {editingExpense ? 'حفظ التعديلات' : 'إضافة المصروف'}
           </button>
         </div>
       </form>
