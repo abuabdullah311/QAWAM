@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StickyHeader } from './components/StickyHeader';
 import { FinancialChart } from './components/FinancialChart';
 import { ExpenseTable } from './components/ExpenseTable';
 import { AddExpenseForm } from './components/AddExpenseForm';
+import { PrintableReport } from './components/PrintableReport';
 import { Expense, ExpenseType, DashboardMetrics } from './types';
 import { GUIDANCE_TEXT } from './constants';
 import { Download, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -14,9 +15,7 @@ function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [showContent, setShowContent] = useState(false);
-  
-  // Ref for the entire app container to capture everything
-  const appContainerRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Initialize from LocalStorage or Defaults
   useEffect(() => {
@@ -92,50 +91,51 @@ function App() {
     }
   };
 
-  // Improved PDF Export to include everything
+  // Robust PDF Export with Multi-page support
   const exportPDF = async () => {
-    if (!appContainerRef.current) return;
-    
+    setIsExporting(true);
     try {
-      // Temporary style adjustments for capture
-      // We need to handle sticky header for PDF capture (make it static)
-      const stickyHeader = appContainerRef.current.querySelector('.sticky-header') as HTMLElement;
-      let originalPosition = '';
-      if (stickyHeader) {
-        originalPosition = stickyHeader.style.position;
-        stickyHeader.style.position = 'static';
+      const input = document.getElementById('printable-report');
+      if (!input) {
+        throw new Error('Printable report element not found');
       }
 
-      const canvas = await html2canvas(appContainerRef.current, {
-        scale: 2,
+      // Generate canvas from the hidden fixed-width container
+      const canvas = await html2canvas(input, {
+        scale: 2, // High resolution
         useCORS: true,
         logging: false,
-        scrollY: -window.scrollY,
-        windowWidth: document.documentElement.offsetWidth,
-        // Ignore the FAB buttons during capture
-        ignoreElements: (element) => element.hasAttribute('data-html2canvas-ignore')
+        backgroundColor: '#ffffff'
       });
 
-      // Restore style
-      if (stickyHeader) {
-        stickyHeader.style.position = originalPosition;
-      }
-      
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4',
-      });
+      const pdf = new jsPDF('p', 'mm', 'a4');
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgWidth = 210; // A4 Width in mm
+      const pageHeight = 297; // A4 Height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // First Page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add extra pages if content overflows
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
       pdf.save(`QAWAM-Report-${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (err) {
       console.error("PDF Export failed", err);
       alert("حدث خطأ أثناء تصدير PDF. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -194,8 +194,17 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-32" ref={appContainerRef}>
+    <div className="min-h-screen bg-slate-50 font-sans pb-32 relative">
       <StickyHeader salary={salary} metrics={metrics} onReset={handleReset} />
+
+      {/* 
+        HIDDEN PRINTABLE REPORT 
+        Positioned fixed off-screen to ensure it renders in desktop width (794px)
+        even on mobile devices, ensuring high quality PDF export.
+      */}
+      <div style={{ position: 'fixed', left: '-10000px', top: 0, zIndex: -5, overflow: 'hidden' }}>
+        <PrintableReport salary={salary} metrics={metrics} expenses={expenses} />
+      </div>
 
       <main className="max-w-4xl mx-auto px-4">
         
@@ -320,7 +329,6 @@ function App() {
       <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
         <p className="mb-2">تم التطوير بواسطة</p>
         <div className="flex justify-center mb-2">
-           {/* Enlarged Logo as requested */}
            <img src="./logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80 hover:opacity-100 transition-opacity" />
         </div>
         <p className="opacity-70">© {new Date().getFullYear()} قوام. جميع الحقوق محفوظة.</p>
@@ -331,14 +339,21 @@ function App() {
         <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3" data-html2canvas-ignore>
           <button 
             onClick={exportPDF}
-            className="bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group"
+            disabled={isExporting}
+            className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
             title="حفظ التقرير كامل كـ PDF"
           >
             <div className="bg-white/10 p-2 rounded-lg">
-              <Download size={20} />
+              {isExporting ? (
+                 <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+              ) : (
+                 <Download size={20} />
+              )}
             </div>
             <div className="text-right">
-              <span className="block font-bold text-sm">حفظ PDF</span>
+              <span className="block font-bold text-sm">
+                {isExporting ? 'جاري التصدير...' : 'حفظ PDF'}
+              </span>
               <span className="block text-[10px] text-slate-300 opacity-80 group-hover:opacity-100">تقرير شامل</span>
             </div>
           </button>
