@@ -1,6 +1,6 @@
 import React from 'react';
 import { DashboardMetrics, Expense, ExpenseType } from '../types';
-import { PieChart, Pie, Cell, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { COLORS } from '../constants';
 
 interface PrintableReportProps {
@@ -10,11 +10,20 @@ interface PrintableReportProps {
 }
 
 export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metrics, expenses }) => {
-  const data = [
+  // Pie Chart Data
+  const pieData = [
     { name: ExpenseType.NEED, value: metrics.totalNeeds, color: COLORS[ExpenseType.NEED] },
     { name: ExpenseType.WANT, value: metrics.totalWants, color: COLORS[ExpenseType.WANT] },
     { name: 'ادخار واستثمار', value: metrics.totalSavingsCalculated, color: COLORS[ExpenseType.SAVING] },
   ].filter(item => item.value > 0);
+
+  // Bar Chart Data
+  const getPercent = (val: number) => salary > 0 ? parseFloat(((val / salary) * 100).toFixed(1)) : 0;
+  const barData = [
+    { name: 'احتياج', actual: getPercent(metrics.totalNeeds), target: 50, color: COLORS[ExpenseType.NEED] },
+    { name: 'رغبة', actual: getPercent(metrics.totalWants), target: 30, color: COLORS[ExpenseType.WANT] },
+    { name: 'ادخار', actual: getPercent(metrics.totalSavingsCalculated), target: 20, color: COLORS[ExpenseType.SAVING] },
+  ];
 
   const today = new Date().toLocaleDateString('ar-SA', {
     weekday: 'long',
@@ -103,38 +112,69 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
         </div>
       </div>
 
-      {/* Chart Section */}
-      <div className="mb-8 flex flex-col items-center justify-center bg-gray-50 border border-gray-100 rounded-xl p-6">
-        <h3 className="text-sm font-bold text-gray-600 mb-4 w-full text-right">التمثيل البياني</h3>
-        <div style={{ width: 400, height: 250, direction: 'ltr' }}>
-          <PieChart width={400} height={250}>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={80}
-              paddingAngle={2}
-              dataKey="value"
-              isAnimationActive={false}
-              label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                const RADIAN = Math.PI / 180;
-                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                return (
-                  <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={10} fontWeight="bold">
-                    {`${(percent * 100).toFixed(0)}%`}
-                  </text>
-                );
-              }}
+      {/* Charts Section (Side by Side) */}
+      <div className="mb-8 bg-gray-50 border border-gray-100 rounded-xl p-6">
+        <h3 className="text-sm font-bold text-gray-600 mb-4 border-r-4 border-emerald-400 pr-2">التحليل البياني</h3>
+        
+        <div className="flex justify-between items-start gap-4">
+          
+          {/* Pie Chart */}
+          <div style={{ width: 330, height: 220, direction: 'ltr' }} className="flex flex-col items-center">
+            <h4 className="text-xs font-bold text-gray-500 mb-2">توزيع المصروفات</h4>
+            <PieChart width={330} height={200}>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={70}
+                paddingAngle={2}
+                dataKey="value"
+                isAnimationActive={false}
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  return (
+                    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={10} fontWeight="bold">
+                      {`${(percent * 100).toFixed(0)}%`}
+                    </text>
+                  );
+                }}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={1} stroke="#fff" />
+                ))}
+              </Pie>
+              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+            </PieChart>
+          </div>
+
+          {/* Vertical Separator */}
+          <div className="w-px h-40 bg-gray-200 mt-4"></div>
+
+          {/* Bar Chart */}
+          <div style={{ width: 330, height: 220, direction: 'ltr' }} className="flex flex-col items-center">
+            <h4 className="text-xs font-bold text-gray-500 mb-2">مقارنة المستهدف (رمادي) بالفعلي</h4>
+            <BarChart
+              width={330}
+              height={200}
+              data={barData}
+              margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
             >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={1} stroke="#fff" />
-              ))}
-            </Pie>
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-          </PieChart>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fontFamily: 'Calibri' }} interval={0} />
+              <YAxis tick={{ fontSize: 10 }} unit="%" />
+              <Bar dataKey="target" fill={COLORS.target} barSize={25} isAnimationActive={false} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="actual" barSize={25} isAnimationActive={false} radius={[4, 4, 0, 0]}>
+                {barData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </div>
+        
         </div>
       </div>
 

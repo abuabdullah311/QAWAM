@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Expense, ExpenseType } from '../types';
-import { EXPENSE_TYPES, SUGGESTED_EXPENSES } from '../constants';
+import { EXPENSE_TYPES, SUGGESTED_EXPENSES, EXPENSE_MAPPING } from '../constants';
 import { PlusCircle, Save, X, AlertTriangle } from 'lucide-react';
 
 interface AddExpenseFormProps {
   salary: number;
   currentTotal: number;
-  expenses: Expense[]; // Added expenses list to analyze for advice
+  expenses: Expense[];
   onAdd: (expense: Omit<Expense, 'id'>) => boolean; 
   editingExpense?: Expense | null;
   onUpdate: (updatedExpense: Expense) => boolean;
@@ -41,6 +41,16 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
     }
   }, [editingExpense]);
 
+  // Auto-Categorization Effect
+  useEffect(() => {
+    // Only auto-categorize if NOT editing an existing expense (to preserve manual overrides on existing items),
+    // OR if the user changes the name while editing.
+    // Here we check if the current name exists in our mapping
+    if (name && EXPENSE_MAPPING[name]) {
+       setType(EXPENSE_MAPPING[name]);
+    }
+  }, [name]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = parseFloat(amount);
@@ -53,23 +63,14 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
       setError(`عفواً، إضافة هذا المبلغ ستتجاوز الراتب بمقدار ${deficit.toLocaleString()}.`);
       
       // --- Smart Expert Advice Logic ---
-      
-      // 1. Analyze Current Distribution (excluding the item being edited to avoid double counting)
       const otherExpenses = expenses.filter(e => editingExpense ? e.id !== editingExpense.id : true);
-      
-      const currentNeeds = otherExpenses.filter(e => e.type === ExpenseType.NEED).reduce((sum, e) => sum + e.amount, 0);
       const currentWants = otherExpenses.filter(e => e.type === ExpenseType.WANT).reduce((sum, e) => sum + e.amount, 0);
-      
-      // Calculate Percentages
       const wantsPct = (currentWants / salary) * 100;
       
-      // 2. Find specific candidates to cut
-      // Sort Wants by amount descending
       const largestWant = otherExpenses
         .filter(e => e.type === ExpenseType.WANT)
         .sort((a, b) => b.amount - a.amount)[0];
 
-      // Sort Needs by amount descending
       const largestNeed = otherExpenses
         .filter(e => e.type === ExpenseType.NEED)
         .sort((a, b) => b.amount - a.amount)[0];
@@ -98,7 +99,6 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
     }
 
     if (success) {
-      // Reset form
       if (!editingExpense) {
         setName('');
         setAmount('');
@@ -113,6 +113,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   const handleSuggestionSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (e.target.value) {
       setName(e.target.value);
+      // Logic for type update is handled by the useEffect dependent on 'name'
     }
   };
 
@@ -187,7 +188,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
 
           {/* Type */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">النوع (إلزامي)</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">النوع</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as ExpenseType)}
