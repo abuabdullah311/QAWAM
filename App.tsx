@@ -5,10 +5,9 @@ import { ExpenseTable } from './components/ExpenseTable';
 import { AddExpenseForm } from './components/AddExpenseForm';
 import { Expense, ExpenseType, DashboardMetrics } from './types';
 import { GUIDANCE_TEXT } from './constants';
-import { Download, Info, AlertCircle, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
+import { Download, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
 
 function App() {
   const [salary, setSalary] = useState<number>(0);
@@ -16,7 +15,8 @@ function App() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [showContent, setShowContent] = useState(false);
   
-  const dashboardRef = useRef<HTMLDivElement>(null);
+  // Ref for the entire app container to capture everything
+  const appContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize from LocalStorage or Defaults
   useEffect(() => {
@@ -80,26 +80,46 @@ function App() {
     setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
-  // Improved PDF Export for Mobile
+  const handleReset = () => {
+    if (window.confirm('هل أنت متأكد من حذف جميع البيانات والبدء من جديد؟')) {
+      localStorage.removeItem('qawam_expenses');
+      localStorage.removeItem('qawam_salary');
+      setSalary(0);
+      setExpenses([]);
+      setEditingExpense(null);
+      setShowContent(false);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Improved PDF Export to include everything
   const exportPDF = async () => {
-    if (!dashboardRef.current) return;
+    if (!appContainerRef.current) return;
     
     try {
       // Temporary style adjustments for capture
-      const originalStyle = dashboardRef.current.style.cssText;
-      dashboardRef.current.style.width = '100%';
-      dashboardRef.current.style.maxWidth = 'none'; // Ensure full width
-      
-      const canvas = await html2canvas(dashboardRef.current, {
+      // We need to handle sticky header for PDF capture (make it static)
+      const stickyHeader = appContainerRef.current.querySelector('.sticky-header') as HTMLElement;
+      let originalPosition = '';
+      if (stickyHeader) {
+        originalPosition = stickyHeader.style.position;
+        stickyHeader.style.position = 'static';
+      }
+
+      const canvas = await html2canvas(appContainerRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
-        scrollY: -window.scrollY, // Fix for scroll position issues
-        windowWidth: document.documentElement.offsetWidth, // Ensure full width capture
+        scrollY: -window.scrollY,
+        windowWidth: document.documentElement.offsetWidth,
+        // Ignore the FAB buttons during capture
+        ignoreElements: (element) => element.hasAttribute('data-html2canvas-ignore')
       });
 
       // Restore style
-      dashboardRef.current.style.cssText = originalStyle;
+      if (stickyHeader) {
+        stickyHeader.style.position = originalPosition;
+      }
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -119,38 +139,6 @@ function App() {
     }
   };
 
-  const exportExcel = () => {
-    const wsData = expenses.map(e => ({
-      'اسم المصرف': e.name,
-      'القيمة': e.amount,
-      'النوع': e.type,
-      'النسبة من الراتب': `${((e.amount / salary) * 100).toFixed(1)}%`,
-      'ملاحظات': e.notes || '-'
-    }));
-
-    // Add summary row
-    wsData.push({} as any);
-    wsData.push({
-      'اسم المصرف': 'الراتب الصافي',
-      'القيمة': salary,
-      'النوع': '-',
-      'النسبة من الراتب': '-',
-      'ملاحظات': '-'
-    } as any);
-    wsData.push({
-      'اسم المصرف': 'إجمالي المصروفات',
-      'القيمة': metrics.totalExpenses,
-      'النوع': '-',
-      'النسبة من الراتب': `${((metrics.totalExpenses / salary) * 100).toFixed(1)}%`,
-      'ملاحظات': '-'
-    } as any);
-
-    const ws = XLSX.utils.json_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "تقرير قَوَام");
-    XLSX.writeFile(wb, `QAWAM-Excel-${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
-
   // 50/30/20 Analysis Logic
   const getAnalysis = () => {
     if (salary === 0) return null;
@@ -158,7 +146,6 @@ function App() {
     const wantPct = (metrics.totalWants / salary) * 100;
     const savePct = (metrics.totalSavingsCalculated / salary) * 100;
 
-    // Smart Reassurance Logic
     const isBalanced = 
       Math.abs(needPct - 50) <= 5 && 
       Math.abs(wantPct - 30) <= 5 && 
@@ -207,13 +194,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-32">
-      <StickyHeader salary={salary} metrics={metrics} />
+    <div className="min-h-screen bg-slate-50 font-sans pb-32" ref={appContainerRef}>
+      <StickyHeader salary={salary} metrics={metrics} onReset={handleReset} />
 
-      <main className="max-w-4xl mx-auto px-4" ref={dashboardRef}>
+      <main className="max-w-4xl mx-auto px-4">
         
         {/* Top Section: Salary Input */}
-        {/* If Salary is 0, this takes center stage. If not, it becomes a compact card */}
         <div className={`transition-all duration-700 ease-in-out ${salary === 0 ? 'min-h-[60vh] flex flex-col justify-center items-center' : 'mb-6'}`}>
           
           <div className={`w-full ${salary === 0 ? 'max-w-xl text-center' : 'grid grid-cols-1 md:grid-cols-2 gap-6'}`}>
@@ -330,47 +316,34 @@ function App() {
 
       </main>
 
-      {/* Floating Action Buttons */}
+      {/* Footer Credits */}
+      <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
+        <p className="mb-2">تم التطوير بواسطة</p>
+        <div className="flex justify-center mb-2">
+           {/* Enlarged Logo as requested */}
+           <img src="./logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80 hover:opacity-100 transition-opacity" />
+        </div>
+        <p className="opacity-70">© {new Date().getFullYear()} قوام. جميع الحقوق محفوظة.</p>
+      </footer>
+
+      {/* Floating Action Button - PDF Only */}
       {showContent && (
-        <div className="fixed bottom-6 left-6 right-6 md:right-auto md:left-6 z-50 flex flex-col md:flex-row gap-3 justify-center md:justify-start">
+        <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3" data-html2canvas-ignore>
           <button 
             onClick={exportPDF}
-            className="flex-1 md:flex-none bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group"
-            title="تصدير PDF"
+            className="bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group"
+            title="حفظ التقرير كامل كـ PDF"
           >
             <div className="bg-white/10 p-2 rounded-lg">
               <Download size={20} />
             </div>
             <div className="text-right">
               <span className="block font-bold text-sm">حفظ PDF</span>
-              <span className="block text-[10px] text-slate-300 opacity-80 group-hover:opacity-100">خطة شهرية مختصرة</span>
-            </div>
-          </button>
-
-          <button 
-            onClick={exportExcel}
-            className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105"
-            title="تصدير Excel"
-          >
-             <div className="bg-white/10 p-2 rounded-lg">
-              <FileSpreadsheet size={20} />
-            </div>
-            <div className="text-right md:hidden lg:block">
-              <span className="block font-bold text-sm">تصدير Excel</span>
-              <span className="block text-[10px] text-emerald-100 opacity-80">بيانات تفصيلية</span>
+              <span className="block text-[10px] text-slate-300 opacity-80 group-hover:opacity-100">تقرير شامل</span>
             </div>
           </button>
         </div>
       )}
-
-      {/* Footer Credits */}
-      <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
-        <p className="mb-2">تم التطوير بواسطة</p>
-        <div className="flex justify-center mb-2">
-           <img src="/ashareef_logo.png" alt="شعار المطور" className="h-10 object-contain opacity-80 hover:opacity-100 transition-opacity" />
-        </div>
-        <p className="opacity-70">© {new Date().getFullYear()} قَوَام. جميع الحقوق محفوظة.</p>
-      </footer>
 
     </div>
   );
