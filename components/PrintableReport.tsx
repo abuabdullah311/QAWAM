@@ -1,6 +1,6 @@
 import React from 'react';
 import { DashboardMetrics, Expense, ExpenseType } from '../types';
-import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, Legend } from 'recharts';
 import { COLORS } from '../constants';
 
 interface PrintableReportProps {
@@ -26,71 +26,104 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
   return (
     <div 
       id="printable-report" 
-      className="bg-white p-8 mx-auto"
+      className="bg-white p-8 mx-auto flex flex-col"
       style={{ 
-        width: '794px', // A4 Width at 96 DPI (Standard for PDF generation)
+        width: '794px', // A4 Width at 96 DPI
         minHeight: '1123px', // A4 Height
         direction: 'rtl',
         fontFamily: 'Calibri, sans-serif'
       }}
     >
-      {/* Header */}
-      <div className="border-b-2 border-gray-800 pb-4 mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 font-diwani">تقرير قَوَام المالي</h1>
-          <p className="text-gray-600">تاريخ التقرير: {today}</p>
+      {/* --- HEADER SECTION --- */}
+      <div className="border-b border-gray-200 pb-4 mb-6">
+        
+        {/* Top Row: Date | Verse | Version */}
+        <div className="flex justify-between items-center mb-4 px-1 gap-2">
+          
+          {/* Date */}
+          <div className="text-xs text-gray-500 w-32">
+            {today}
+          </div>
+
+          {/* Verse (Center) */}
+          <div className="flex-1 text-center mx-2">
+             <span className="font-diwani text-emerald-700 text-xl block leading-tight mb-1">
+               ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
+             </span>
+             <span className="font-sans text-xs text-emerald-600 opacity-80">[الفرقان: 67]</span>
+          </div>
+
+          {/* Version (Right - No Reset Button) */}
+          <div className="w-32 flex justify-end">
+             <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded-full">v1.2</span>
+          </div>
         </div>
-        <div className="text-left">
-           <img src="./logo.png" alt="QAWAM" className="h-16 object-contain grayscale" />
+
+        {/* Logo Section */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex justify-center w-full">
+            <img 
+              src="./QAWAM_logo.png" 
+              alt="QAWAM" 
+              className="h-16 object-contain"
+            />
+          </div>
+          <h2 className="text-lg font-bold text-gray-800 border-b-2 border-emerald-500 pb-1 px-4">تقرير مالي شامل</h2>
         </div>
       </div>
 
-      {/* Summary Section */}
+      {/* --- CONTENT SECTION --- */}
+
+      {/* Summary Cards */}
       <div className="mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 border-r-4 border-gray-800 pr-2">ملخص الدخل والتوزيع</h2>
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <div className="bg-gray-50 p-4 border border-gray-200 rounded">
-            <span className="block text-gray-500 text-sm mb-1">صافي الراتب</span>
-            <span className="block text-xl font-bold text-gray-900">{salary.toLocaleString()}</span>
+        <h3 className="text-sm font-bold text-gray-500 mb-3">ملخص الدخل والتوزيع</h3>
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg text-center">
+            <span className="block text-gray-500 text-xs mb-1">صافي الراتب</span>
+            <span className="block text-xl font-black text-gray-800">{salary.toLocaleString()}</span>
+            <span className="text-[10px] text-gray-400">ريال</span>
           </div>
-          <div className="bg-gray-50 p-4 border border-gray-200 rounded">
-            <span className="block text-gray-500 text-sm mb-1">مجموع المصاريف</span>
-            <span className="block text-xl font-bold text-red-700">{metrics.totalExpenses.toLocaleString()}</span>
+          <div className="bg-gray-50 p-4 border border-gray-200 rounded-lg text-center">
+            <span className="block text-gray-500 text-xs mb-1">إجمالي المصروفات</span>
+            <span className="block text-xl font-black text-gray-700">{metrics.totalExpenses.toLocaleString()}</span>
+            <span className="text-[10px] text-gray-400">ريال</span>
           </div>
-          <div className="bg-gray-50 p-4 border border-gray-200 rounded">
-            <span className="block text-gray-500 text-sm mb-1">المتبقي</span>
-            <span className="block text-xl font-bold text-blue-700">{metrics.remainingSalary.toLocaleString()}</span>
+          <div className="bg-blue-50 p-4 border border-blue-100 rounded-lg text-center">
+            <span className="block text-blue-600 text-xs mb-1">المتبقي (حر)</span>
+            <span className="block text-xl font-black text-blue-700">{metrics.remainingSalary.toLocaleString()}</span>
+            <span className="text-[10px] text-blue-400">ريال</span>
           </div>
-          <div className="bg-gray-50 p-4 border border-gray-200 rounded">
-            <span className="block text-gray-500 text-sm mb-1">نسبة الادخار</span>
-            <span className="block text-xl font-bold text-emerald-700">
+          <div className="bg-emerald-50 p-4 border border-emerald-100 rounded-lg text-center">
+            <span className="block text-emerald-600 text-xs mb-1">معدل الادخار</span>
+            <span className="block text-xl font-black text-emerald-700">
               {salary > 0 ? Math.round((metrics.totalSavingsCalculated / salary) * 100) : 0}%
             </span>
+            <span className="text-[10px] text-emerald-400">من الدخل</span>
           </div>
         </div>
       </div>
 
-      {/* Chart Section - Fixed Size for Print */}
-      <div className="mb-8 flex flex-col items-center justify-center bg-gray-50 border border-gray-100 rounded-lg p-6">
-        <h3 className="text-lg font-bold text-gray-700 mb-4">التمثيل البياني للمصروفات</h3>
-        <div style={{ width: 400, height: 300, direction: 'ltr' }}>
-          <PieChart width={400} height={300}>
+      {/* Chart Section */}
+      <div className="mb-8 flex flex-col items-center justify-center bg-gray-50 border border-gray-100 rounded-xl p-6">
+        <h3 className="text-sm font-bold text-gray-600 mb-4 w-full text-right">التمثيل البياني</h3>
+        <div style={{ width: 400, height: 250, direction: 'ltr' }}>
+          <PieChart width={400} height={250}>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={90}
+              innerRadius={50}
+              outerRadius={80}
               paddingAngle={2}
               dataKey="value"
-              isAnimationActive={false} // Disable animation for instant capture
+              isAnimationActive={false}
               label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                 const RADIAN = Math.PI / 180;
                 const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
                 return (
-                  <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={12} fontWeight="bold">
+                  <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={10} fontWeight="bold">
                     {`${(percent * 100).toFixed(0)}%`}
                   </text>
                 );
@@ -100,48 +133,52 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
                 <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={1} stroke="#fff" />
               ))}
             </Pie>
-            <Legend verticalAlign="bottom" height={36} iconType="circle" />
+            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
           </PieChart>
         </div>
       </div>
 
       {/* Detailed Table */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 border-r-4 border-gray-800 pr-2">تفاصيل المصروفات</h2>
+      <div className="mb-8 flex-1">
+        <h3 className="text-sm font-bold text-gray-600 mb-3 border-r-4 border-gray-400 pr-2">تفاصيل البنود</h3>
         <table className="w-full text-right border-collapse text-sm">
           <thead>
-            <tr className="bg-gray-800 text-white">
-              <th className="p-3 border border-gray-700">المصرف</th>
-              <th className="p-3 border border-gray-700">النوع</th>
-              <th className="p-3 border border-gray-700">المبلغ</th>
-              <th className="p-3 border border-gray-700">النسبة</th>
-              <th className="p-3 border border-gray-700">ملاحظات</th>
+            <tr className="bg-gray-100 text-gray-700">
+              <th className="p-2 border border-gray-200 text-xs">المصرف</th>
+              <th className="p-2 border border-gray-200 text-xs w-24">النوع</th>
+              <th className="p-2 border border-gray-200 text-xs w-24">المبلغ</th>
+              <th className="p-2 border border-gray-200 text-xs w-16">النسبة</th>
+              <th className="p-2 border border-gray-200 text-xs">ملاحظات</th>
             </tr>
           </thead>
           <tbody>
             {expenses.map((expense, idx) => (
               <tr key={expense.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="p-2 border border-gray-300 font-bold">{expense.name}</td>
-                <td className="p-2 border border-gray-300">{expense.type}</td>
-                <td className="p-2 border border-gray-300">{expense.amount.toLocaleString()}</td>
-                <td className="p-2 border border-gray-300">
+                <td className="p-2 border border-gray-200 font-bold text-gray-800">{expense.name}</td>
+                <td className="p-2 border border-gray-200 text-gray-600 text-xs">{expense.type}</td>
+                <td className="p-2 border border-gray-200 font-mono text-gray-700">{expense.amount.toLocaleString()}</td>
+                <td className="p-2 border border-gray-200 text-xs text-gray-500">
                   {salary > 0 ? ((expense.amount / salary) * 100).toFixed(1) : 0}%
                 </td>
-                <td className="p-2 border border-gray-300 text-gray-500">{expense.notes || '-'}</td>
+                <td className="p-2 border border-gray-200 text-gray-400 text-xs">{expense.notes || '-'}</td>
               </tr>
             ))}
             {expenses.length === 0 && (
                 <tr>
-                    <td colSpan={5} className="p-4 text-center text-gray-500 border border-gray-300">لا توجد بيانات</td>
+                    <td colSpan={5} className="p-4 text-center text-gray-500 border border-gray-200">لا توجد بيانات</td>
                 </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Footer */}
-      <div className="mt-auto pt-8 border-t border-gray-300 text-center text-xs text-gray-400">
-        <p>تم استخراج هذا التقرير آلياً بواسطة تطبيق قَوَام - QAWAM</p>
+      {/* --- FOOTER SECTION --- */}
+      <div className="mt-auto pt-6 border-t border-gray-200 text-center">
+        <p className="text-xs text-gray-400 mb-2">تم التطوير بواسطة</p>
+        <div className="flex justify-center mb-2">
+           <img src="./ashareef_logo.png" alt="Developer Logo" className="h-12 object-contain opacity-80" />
+        </div>
+        <p className="text-[10px] text-gray-400 opacity-70">© {new Date().getFullYear()} قوام. جميع الحقوق محفوظة.</p>
       </div>
     </div>
   );
