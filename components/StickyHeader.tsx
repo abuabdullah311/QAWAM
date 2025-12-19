@@ -1,12 +1,14 @@
 import React from 'react';
 import { DashboardMetrics } from '../types';
+import { RotateCcw } from 'lucide-react';
 
 interface StickyHeaderProps {
   salary: number;
   metrics: DashboardMetrics;
+  onReset: () => void;
 }
 
-export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics }) => {
+export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics, onReset }) => {
   const savingsPercentage = salary > 0 ? Math.round((metrics.totalSavingsCalculated / salary) * 100) : 0;
   
   // Date Formatting
@@ -21,10 +23,21 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics }) =
     <div className="sticky-header bg-white/95 border-b border-gray-200 shadow-sm py-2 px-4 mb-6 backdrop-blur-md transition-all duration-300">
       <div className="max-w-4xl mx-auto">
         
-        {/* Top Row: Date & Version */}
+        {/* Top Row: Date & Version & Reset */}
         <div className="flex justify-between items-center text-[10px] text-gray-400 mb-1 px-1">
           <span>{today}</span>
-          <span className="font-mono bg-gray-100 px-2 rounded-full">v1.1</span>
+          <div className="flex items-center gap-3">
+             <button 
+               onClick={onReset}
+               className="flex items-center gap-1 text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-0.5 rounded transition-all group"
+               title="حذف البيانات والبدء من جديد"
+               data-html2canvas-ignore
+             >
+               <RotateCcw size={10} className="group-hover:-rotate-180 transition-transform duration-500" />
+               <span>إعادة تعيين</span>
+             </button>
+             <span className="font-mono bg-gray-100 px-2 rounded-full">v1.1</span>
+          </div>
         </div>
 
         {/* Quranic Verse */}
@@ -39,21 +52,21 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics }) =
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+        <div className="flex flex-col items-center gap-3">
           
-          {/* App Title */}
-          <div className="flex items-center justify-between w-full md:w-auto">
-            <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-              قَوَام 
-              <span className="text-slate-400 font-light text-sm hidden sm:inline">- QAWAM</span>
-            </h1>
+          {/* App Logo - Centered */}
+          <div className="flex justify-center w-full">
+            <img 
+              src="./QAWAM_logo.png" 
+              alt="QAWAM" 
+              className="h-12 md:h-14 object-contain"
+            />
           </div>
           
           {/* Metrics Bar - Only show if Salary is entered */}
           {salary > 0 && (
-            <div className="flex flex-wrap justify-center md:justify-end gap-2 md:gap-6 text-sm w-full md:w-auto animate-[fadeIn_0.5s_ease-out]">
-              
-              <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-100 shadow-sm">
+            <div className="flex justify-center w-full animate-[fadeIn_0.5s_ease-out]">
+              <div className="flex flex-wrap justify-center items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-100 shadow-sm">
                 
                 {/* Remaining - Highlighted */}
                 <div className="flex flex-col items-center px-2">
