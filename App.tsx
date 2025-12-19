@@ -329,7 +329,9 @@ function App() {
       <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
         <p className="mb-2">تم التطوير بواسطة</p>
         <div className="flex justify-center mb-2">
-           <img src="./ashareef_logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80 hover:opacity-100 transition-opacity" />
+           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation/" target="_blank" rel="noopener noreferrer" className="inline-block transition-transform hover:scale-105">
+             <img src="./ashareef_logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80 hover:opacity-100 transition-opacity" />
+           </a>
         </div>
         <p className="opacity-70">© {new Date().getFullYear()} قوام. جميع الحقوق محفوظة.</p>
       </footer>
