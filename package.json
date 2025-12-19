@@ -14,7 +14,8 @@
     "lucide-react": "^0.562.0",
     "recharts": "^3.6.0",
     "jspdf": "^3.0.4",
-    "html2canvas": "^1.4.1"
+    "html2canvas": "^1.4.1",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

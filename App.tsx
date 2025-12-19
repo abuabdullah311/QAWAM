@@ -5,14 +5,16 @@ import { ExpenseTable } from './components/ExpenseTable';
 import { AddExpenseForm } from './components/AddExpenseForm';
 import { Expense, ExpenseType, DashboardMetrics } from './types';
 import { GUIDANCE_TEXT } from './constants';
-import { Download, Info, AlertCircle } from 'lucide-react';
+import { Download, Info, AlertCircle, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
 
 function App() {
   const [salary, setSalary] = useState<number>(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [showContent, setShowContent] = useState(false);
   
   const dashboardRef = useRef<HTMLDivElement>(null);
 
@@ -21,12 +23,15 @@ function App() {
     const savedExpenses = localStorage.getItem('qawam_expenses');
     const savedSalary = localStorage.getItem('qawam_salary');
 
-    if (savedSalary) setSalary(parseFloat(savedSalary));
+    if (savedSalary) {
+      const s = parseFloat(savedSalary);
+      setSalary(s);
+      if (s > 0) setShowContent(true);
+    }
     
     if (savedExpenses) {
       setExpenses(JSON.parse(savedExpenses));
     } else {
-      // Initialize empty to keep UI clean until user adds expenses
       setExpenses([]);
     }
   }, []);
@@ -35,6 +40,7 @@ function App() {
   useEffect(() => {
     localStorage.setItem('qawam_expenses', JSON.stringify(expenses));
     localStorage.setItem('qawam_salary', salary.toString());
+    if (salary > 0) setShowContent(true);
   }, [expenses, salary]);
 
   // Calculations
@@ -45,9 +51,6 @@ function App() {
     
     const totalExpenses = totalNeeds + totalWants + totalSavingsExpenses;
     const remainingSalary = salary - totalExpenses;
-    
-    // Logic: Total Savings = (Salary - Needs - Wants).
-    // This includes both explicit "Saving" expenses AND remaining cash.
     const totalSavingsCalculated = Math.max(0, salary - totalNeeds - totalWants);
 
     return {
@@ -77,180 +80,297 @@ function App() {
     setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
+  // Improved PDF Export for Mobile
   const exportPDF = async () => {
     if (!dashboardRef.current) return;
     
-    const canvas = await html2canvas(dashboardRef.current, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    });
-    
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'p',
-      unit: 'mm',
-      format: 'a4',
-    });
-    
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`QAWAM-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+    try {
+      // Temporary style adjustments for capture
+      const originalStyle = dashboardRef.current.style.cssText;
+      dashboardRef.current.style.width = '100%';
+      dashboardRef.current.style.maxWidth = 'none'; // Ensure full width
+      
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        scrollY: -window.scrollY, // Fix for scroll position issues
+        windowWidth: document.documentElement.offsetWidth, // Ensure full width capture
+      });
+
+      // Restore style
+      dashboardRef.current.style.cssText = originalStyle;
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`QAWAM-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+      alert("حدث خطأ أثناء تصدير PDF. يرجى المحاولة مرة أخرى.");
+    }
   };
 
-  // 50/30/20 Analysis Text
+  const exportExcel = () => {
+    const wsData = expenses.map(e => ({
+      'اسم المصرف': e.name,
+      'القيمة': e.amount,
+      'النوع': e.type,
+      'النسبة من الراتب': `${((e.amount / salary) * 100).toFixed(1)}%`,
+      'ملاحظات': e.notes || '-'
+    }));
+
+    // Add summary row
+    wsData.push({} as any);
+    wsData.push({
+      'اسم المصرف': 'الراتب الصافي',
+      'القيمة': salary,
+      'النوع': '-',
+      'النسبة من الراتب': '-',
+      'ملاحظات': '-'
+    } as any);
+    wsData.push({
+      'اسم المصرف': 'إجمالي المصروفات',
+      'القيمة': metrics.totalExpenses,
+      'النوع': '-',
+      'النسبة من الراتب': `${((metrics.totalExpenses / salary) * 100).toFixed(1)}%`,
+      'ملاحظات': '-'
+    } as any);
+
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تقرير قَوَام");
+    XLSX.writeFile(wb, `QAWAM-Excel-${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  // 50/30/20 Analysis Logic
   const getAnalysis = () => {
     if (salary === 0) return null;
     const needPct = (metrics.totalNeeds / salary) * 100;
     const wantPct = (metrics.totalWants / salary) * 100;
     const savePct = (metrics.totalSavingsCalculated / salary) * 100;
 
+    // Smart Reassurance Logic
+    const isBalanced = 
+      Math.abs(needPct - 50) <= 5 && 
+      Math.abs(wantPct - 30) <= 5 && 
+      savePct >= 15;
+
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <AnalysisCard 
-          title="الاحتياج (الهدف 50%)" 
-          current={needPct} 
-          target={50} 
-          color="red" // Changed to red
-          label={ExpenseType.NEED}
-        />
-        <AnalysisCard 
-          title="الرغبات (الهدف 30%)" 
-          current={wantPct} 
-          target={30} 
-          color="amber"
-          label={ExpenseType.WANT} 
-        />
-        <AnalysisCard 
-          title="الادخار (الهدف 20%)" 
-          current={savePct} 
-          target={20} 
-          color="emerald" 
-          label={ExpenseType.SAVING}
-          isMinimum
-        />
+      <div className="mb-6">
+        {isBalanced && (
+          <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-3 animate-pulse">
+            <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
+              <CheckCircle2 size={24} />
+            </div>
+            <div>
+              <p className="font-bold text-emerald-800">أحسنت! توزيعك المالي متوازن.</p>
+              <p className="text-xs text-emerald-600">أنت تلتزم بقاعدة 50/30/20 بشكل ممتاز.</p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <AnalysisCard 
+            title="الاحتياج (الهدف 50%)" 
+            current={needPct} 
+            target={50} 
+            color="red"
+            label={ExpenseType.NEED}
+          />
+          <AnalysisCard 
+            title="الرغبات (الهدف 30%)" 
+            current={wantPct} 
+            target={30} 
+            color="amber"
+            label={ExpenseType.WANT} 
+          />
+          <AnalysisCard 
+            title="الادخار (الهدف 20%)" 
+            current={savePct} 
+            target={20} 
+            color="emerald" 
+            label={ExpenseType.SAVING}
+            isMinimum
+          />
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20">
+    <div className="min-h-screen bg-slate-50 font-sans pb-32">
       <StickyHeader salary={salary} metrics={metrics} />
 
       <main className="max-w-4xl mx-auto px-4" ref={dashboardRef}>
         
-        {/* Top Section: Salary Input & Guide Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Top Section: Salary Input */}
+        {/* If Salary is 0, this takes center stage. If not, it becomes a compact card */}
+        <div className={`transition-all duration-700 ease-in-out ${salary === 0 ? 'min-h-[60vh] flex flex-col justify-center items-center' : 'mb-6'}`}>
           
-          {/* Salary Input (Right in RTL) */}
-          <section className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 h-full flex flex-col justify-center">
-            <label className="block text-sm font-bold text-gray-700 mb-2">صافي الراتب الشهري</label>
-            <div className="relative">
-              <input
-                type="number"
-                value={salary || ''}
-                onChange={(e) => setSalary(parseFloat(e.target.value))}
-                placeholder="0"
-                className="w-full text-4xl font-bold text-gray-800 border-b-2 border-gray-300 focus:border-blue-600 outline-none py-2 bg-transparent transition-colors"
-              />
-              <span className="absolute left-0 bottom-3 text-gray-400 font-medium">ريال</span>
-            </div>
+          <div className={`w-full ${salary === 0 ? 'max-w-xl text-center' : 'grid grid-cols-1 md:grid-cols-2 gap-6'}`}>
             
-            {/* Added Clarification */}
-            <div className="flex items-start gap-2 mt-4 bg-blue-50/50 p-3 rounded-lg border border-blue-100/50">
-              <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
-              <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                المقصود هو الراتب الشهري الصافي الذي يتم إيداعه في الحساب البنكي شهرياً.
-              </p>
+            {/* Salary Input Card */}
+            <section className={`bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden transition-all duration-500 ${salary === 0 ? 'shadow-xl scale-105 border-blue-200' : 'h-full flex flex-col justify-center'}`}>
+              
+              {salary === 0 && (
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
+              )}
+
+              <label className={`block font-bold text-gray-800 mb-3 ${salary === 0 ? 'text-xl' : 'text-sm'}`}>
+                {salary === 0 ? 'خطوتك الأولى: أدخل صافي راتبك 💰' : 'صافي الراتب الشهري'}
+              </label>
+              
+              <div className="relative">
+                <input
+                  type="number"
+                  value={salary || ''}
+                  onChange={(e) => setSalary(parseFloat(e.target.value))}
+                  placeholder="0"
+                  autoFocus={salary === 0}
+                  className={`w-full font-black text-gray-800 border-b-2 border-gray-200 focus:border-blue-600 outline-none bg-transparent transition-all placeholder-gray-200 ${salary === 0 ? 'text-6xl text-center py-4' : 'text-4xl py-2'}`}
+                />
+                <span className={`absolute text-gray-400 font-medium ${salary === 0 ? 'left-4 bottom-6 text-lg' : 'left-0 bottom-3'}`}>ريال</span>
+              </div>
+              
+              <div className={`flex items-start gap-2 mt-4 bg-blue-50/50 p-3 rounded-lg border border-blue-100/50 ${salary === 0 ? 'justify-center' : ''}`}>
+                <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  المقصود هو الراتب الشهري الصافي الذي يتم إيداعه في الحساب البنكي شهرياً.
+                </p>
+              </div>
+            </section>
+
+            {/* Quick Guide - Only visible when dashboard is active */}
+            {salary > 0 && (
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 h-full flex flex-col justify-center animate-fade-in">
+                <div className="flex items-center gap-2 mb-2 text-blue-800">
+                    <Info size={20} />
+                    <h3 className="font-bold">إرشادات سريعة</h3>
+                </div>
+                <p className="text-sm text-blue-700 leading-relaxed whitespace-pre-line">
+                  {GUIDANCE_TEXT}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Dashboard Content - Hidden until Salary > 0 */}
+        {showContent && (
+          <div className="fade-in space-y-6">
+            
+            {/* Charts & Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="font-bold text-gray-700 mb-4 text-center">توزيع الراتب</h3>
+                <FinancialChart metrics={metrics} />
+              </div>
+              
+              <div className="lg:col-span-2 flex flex-col gap-6">
+                 {/* 50/30/20 Indicators */}
+                 {getAnalysis()}
+                 
+                 {/* Quick Stats Box */}
+                 <div className="bg-indigo-900 text-white rounded-xl p-6 shadow-lg flex flex-col justify-center h-full min-h-[140px]">
+                    <h4 className="text-indigo-200 text-sm font-medium mb-1">الادخار والاستثمار الكلي</h4>
+                    <div className="text-4xl font-bold mb-2">{metrics.totalSavingsCalculated.toLocaleString()} <span className="text-lg font-normal text-indigo-300">ريال</span></div>
+                    <p className="text-xs text-indigo-300 mb-4">يشمل المبالغ المصنفة كادخار + المتبقي من الراتب</p>
+                    
+                    {metrics.remainingSalary > 0 && (
+                       <div className="bg-indigo-800/50 rounded px-3 py-2 text-sm flex items-center gap-2 w-fit">
+                          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                          متبقي غير موزع: {metrics.remainingSalary.toLocaleString()}
+                       </div>
+                    )}
+                 </div>
+              </div>
             </div>
-          </section>
 
-          {/* Quick Guide (Left in RTL) */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 h-full flex flex-col justify-center">
-             <div className="flex items-center gap-2 mb-2 text-blue-800">
-                <Info size={20} />
-                <h3 className="font-bold">إرشادات سريعة</h3>
-             </div>
-             <p className="text-sm text-blue-700 leading-relaxed whitespace-pre-line">
-               {GUIDANCE_TEXT}
-             </p>
-          </div>
-
-        </div>
-
-        {/* Dashboard: Charts & Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <h3 className="font-bold text-gray-700 mb-4 text-center">توزيع الراتب</h3>
-            <FinancialChart metrics={metrics} />
-          </div>
-          
-          <div className="lg:col-span-2">
-             {/* 50/30/20 Indicators */}
-             {getAnalysis()}
-             
-             {/* Quick Stats Box */}
-             <div className="bg-indigo-900 text-white rounded-xl p-6 shadow-lg flex flex-col justify-center h-48">
-                <h4 className="text-indigo-200 text-sm font-medium mb-1">الادخار والاستثمار الكلي</h4>
-                <div className="text-4xl font-bold mb-2">{metrics.totalSavingsCalculated.toLocaleString()}</div>
-                <p className="text-xs text-indigo-300 mb-4">يشمل المبالغ المصنفة كادخار + المتبقي من الراتب</p>
-                
-                {metrics.remainingSalary > 0 && (
-                   <div className="bg-indigo-800/50 rounded px-3 py-2 text-sm flex items-center gap-2 w-fit">
-                      <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                      متبقي غير موزع: {metrics.remainingSalary.toLocaleString()}
-                   </div>
-                )}
-             </div>
-          </div>
-        </div>
-
-        {/* Add/Edit Form */}
-        <div data-html2canvas-ignore>
-           <AddExpenseForm 
-             salary={salary} 
-             currentTotal={metrics.totalExpenses}
-             expenses={expenses} // Passing expenses for analysis
-             onAdd={handleAddExpense}
-             editingExpense={editingExpense}
-             onUpdate={handleUpdateExpense}
-             onCancelEdit={() => setEditingExpense(null)}
-           />
-        </div>
-
-        {/* Table - Only shown if expenses exist */}
-        {expenses.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 animate-fade-in">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-               <h3 className="font-bold text-gray-800">تفاصيل المصارف</h3>
-               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                 {expenses.length} بند
-               </span>
+            {/* Add/Edit Form */}
+            <div data-html2canvas-ignore>
+               <AddExpenseForm 
+                 salary={salary} 
+                 currentTotal={metrics.totalExpenses}
+                 expenses={expenses}
+                 onAdd={handleAddExpense}
+                 editingExpense={editingExpense}
+                 onUpdate={handleUpdateExpense}
+                 onCancelEdit={() => setEditingExpense(null)}
+               />
             </div>
-            <ExpenseTable 
-              expenses={expenses} 
-              salary={salary} 
-              onDelete={handleDeleteExpense} 
-              onEdit={setEditingExpense}
-            />
+
+            {/* Table */}
+            {expenses.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 animate-fade-in">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
+                   <h3 className="font-bold text-gray-800">تفاصيل المصارف</h3>
+                   <span className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full shadow-sm">
+                     {expenses.length} بند
+                   </span>
+                </div>
+                <ExpenseTable 
+                  expenses={expenses} 
+                  salary={salary} 
+                  onDelete={handleDeleteExpense} 
+                  onEdit={setEditingExpense}
+                />
+              </div>
+            )}
           </div>
         )}
 
       </main>
 
-      {/* Floating Action Button for Export */}
-      <div className="fixed bottom-6 left-6 z-50">
-        <button 
-          onClick={exportPDF}
-          className="bg-gray-800 hover:bg-gray-900 text-white p-4 rounded-full shadow-xl flex items-center gap-2 transition-transform hover:scale-105"
-          title="تصدير PDF"
-        >
-          <Download size={24} />
-          <span className="font-bold hidden md:inline">حفظ PDF</span>
-        </button>
-      </div>
+      {/* Floating Action Buttons */}
+      {showContent && (
+        <div className="fixed bottom-6 left-6 right-6 md:right-auto md:left-6 z-50 flex flex-col md:flex-row gap-3 justify-center md:justify-start">
+          <button 
+            onClick={exportPDF}
+            className="flex-1 md:flex-none bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group"
+            title="تصدير PDF"
+          >
+            <div className="bg-white/10 p-2 rounded-lg">
+              <Download size={20} />
+            </div>
+            <div className="text-right">
+              <span className="block font-bold text-sm">حفظ PDF</span>
+              <span className="block text-[10px] text-slate-300 opacity-80 group-hover:opacity-100">خطة شهرية مختصرة</span>
+            </div>
+          </button>
+
+          <button 
+            onClick={exportExcel}
+            className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105"
+            title="تصدير Excel"
+          >
+             <div className="bg-white/10 p-2 rounded-lg">
+              <FileSpreadsheet size={20} />
+            </div>
+            <div className="text-right md:hidden lg:block">
+              <span className="block font-bold text-sm">تصدير Excel</span>
+              <span className="block text-[10px] text-emerald-100 opacity-80">بيانات تفصيلية</span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Footer Credits */}
+      <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
+        <p className="mb-2">تم التطوير بواسطة</p>
+        <div className="flex justify-center mb-2">
+           <img src="/ashareef_logo.png" alt="شعار المطور" className="h-10 object-contain opacity-80 hover:opacity-100 transition-opacity" />
+        </div>
+        <p className="opacity-70">© {new Date().getFullYear()} قَوَام. جميع الحقوق محفوظة.</p>
+      </footer>
 
     </div>
   );
@@ -259,37 +379,40 @@ function App() {
 // Helper Component for the 50/30/20 cards
 const AnalysisCard = ({ title, current, target, color, label, isMinimum = false }: any) => {
   const diff = current - target;
-  // If need/want exceeds target -> Warning. If savings exceeds target -> Good.
   const isNegative = isMinimum ? diff < -5 : diff > 5; 
   
-  // Tailwind dynamic classes hack
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-700 border-blue-100',
-    red: 'bg-red-50 text-red-700 border-red-100', // Added Red variant
+    red: 'bg-red-50 text-red-700 border-red-100',
     amber: 'bg-amber-50 text-amber-700 border-amber-100',
     emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${colors[color]}`}>
+    <div className={`p-4 rounded-lg border ${colors[color]} transition-all hover:shadow-sm`}>
       <div className="flex justify-between items-start mb-2">
         <span className="text-sm font-bold">{title}</span>
-        <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm opacity-80">{Math.round(current)}%</span>
+        <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm opacity-80 font-mono font-bold">{Math.round(current)}%</span>
       </div>
       <div className="w-full bg-white/50 h-2 rounded-full mb-2 overflow-hidden">
         <div 
-          className={`h-full rounded-full transition-all duration-500 bg-current`} 
+          className={`h-full rounded-full transition-all duration-1000 ease-out bg-current`} 
           style={{ width: `${Math.min(current, 100)}%` }}
         ></div>
       </div>
-      {isNegative && (
+      {isNegative ? (
         <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
-          <AlertCircle size={12} className="mt-0.5" />
+          <AlertCircle size={12} className="mt-0.5 shrink-0" />
           <span>
              {isMinimum 
                ? `أقل من الهدف بـ ${Math.abs(Math.round(diff))}%` 
                : `أعلى من الهدف بـ ${Math.round(diff)}%`}
           </span>
+        </div>
+      ) : (
+        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
+          <CheckCircle2 size={12} className="mt-0.5 shrink-0" />
+          <span>ضمن النطاق المثالي</span>
         </div>
       )}
     </div>

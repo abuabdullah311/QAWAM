@@ -23,6 +23,14 @@
         z-index: 50;
         backdrop-filter: blur(10px);
       }
+      /* Smooth fade in animation */
+      .fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     </style>
   <script type="importmap">
 {
@@ -33,7 +41,8 @@
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "recharts": "https://esm.sh/recharts@^3.6.0",
     "jspdf": "https://esm.sh/jspdf@^3.0.4",
-    "html2canvas": "https://esm.sh/html2canvas@^1.4.1"
+    "html2canvas": "https://esm.sh/html2canvas@^1.4.1",
+    "xlsx": "https://esm.sh/xlsx@0.18.5"
   }
 }
 </script>
