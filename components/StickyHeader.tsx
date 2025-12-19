@@ -15,10 +15,12 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({ salary, metrics }) =
         
         {/* Quranic Verse */}
         <div className="text-center mb-3 pb-3 border-b border-slate-100">
-           <p className="text-emerald-700 font-serif text-base md:text-lg leading-relaxed font-medium">
-             ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
-             <span className="text-xs text-emerald-600/80 mr-2 block md:inline md:mr-2 mt-1 md:mt-0">سورة الفرقان - الآية 67</span>
-           </p>
+           <div className="text-emerald-700 leading-relaxed">
+             <span className="font-diwani text-xl md:text-3xl block mb-1">
+               ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
+             </span>
+             <span className="text-xs text-emerald-600/80 block">سورة الفرقان - الآية 67</span>
+           </div>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
