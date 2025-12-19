@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StickyHeader } from './components/StickyHeader';
 import { FinancialChart } from './components/FinancialChart';
+import { TargetVsActualChart } from './components/TargetVsActualChart';
 import { ExpenseTable } from './components/ExpenseTable';
 import { AddExpenseForm } from './components/AddExpenseForm';
 import { PrintableReport } from './components/PrintableReport';
@@ -9,6 +10,49 @@ import { GUIDANCE_TEXT } from './constants';
 import { Download, Info, AlertCircle, CheckCircle2, Plus } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+
+// Helper Component defined as function
+function AnalysisCard({ title, current, target, color, label, isMinimum = false }: any) {
+  const diff = current - target;
+  const isNegative = isMinimum ? diff < -5 : diff > 5; 
+  
+  const colors: Record<string, string> = {
+    blue: 'bg-blue-50 text-blue-700 border-blue-100',
+    red: 'bg-red-50 text-red-700 border-red-100',
+    amber: 'bg-amber-50 text-amber-700 border-amber-100',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  };
+
+  return (
+    <div className={`p-4 rounded-lg border ${colors[color]} transition-all hover:shadow-sm`}>
+      <div className="flex justify-between items-start mb-2">
+        <span className="text-sm font-bold">{title}</span>
+        <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm opacity-80 font-mono font-bold">{Math.round(current)}%</span>
+      </div>
+      <div className="w-full bg-white/50 h-2 rounded-full mb-2 overflow-hidden">
+        <div 
+          className={`h-full rounded-full transition-all duration-1000 ease-out bg-current`} 
+          style={{ width: `${Math.min(current, 100)}%` }}
+        ></div>
+      </div>
+      {isNegative ? (
+        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
+          <AlertCircle size={12} className="mt-0.5 shrink-0" />
+          <span>
+             {isMinimum 
+               ? `أقل من الهدف بـ ${Math.abs(Math.round(diff))}%` 
+               : `أعلى من الهدف بـ ${Math.round(diff)}%`}
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
+          <CheckCircle2 size={12} className="mt-0.5 shrink-0" />
+          <span>ضمن النطاق المثالي</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function App() {
   const [salary, setSalary] = useState<number>(0);
@@ -282,9 +326,16 @@ function App() {
             
             {/* Charts & Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="font-bold text-gray-700 mb-4 text-center">توزيع الراتب</h3>
-                <FinancialChart metrics={metrics} />
+              <div className="lg:col-span-1 flex flex-col gap-4">
+                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">التوزيع الحالي</h3>
+                    <FinancialChart metrics={metrics} />
+                 </div>
+                 
+                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">مقارنة المستهدف (رمادي) بالفعلي</h3>
+                    <TargetVsActualChart salary={salary} metrics={metrics} />
+                 </div>
               </div>
               
               <div className="lg:col-span-2 flex flex-col gap-6">
@@ -367,7 +418,7 @@ function App() {
       <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
         <p className="mb-2">تم التطوير بواسطة</p>
         <div className="flex justify-center mb-2">
-           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation/" target="_blank" rel="noopener noreferrer" className="inline-block transition-transform hover:scale-105">
+           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer" className="inline-block transition-transform hover:scale-105">
              <img src="./ashareef_logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80 hover:opacity-100 transition-opacity" />
            </a>
         </div>
@@ -387,7 +438,7 @@ function App() {
               {isExporting ? (
                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
               ) : (
-                 <Download size={20} />
+                 <div className="text-2xl font-bold"><Download size={20} /></div>
               )}
             </div>
             <div className="text-right">
@@ -403,48 +454,5 @@ function App() {
     </div>
   );
 }
-
-// Helper Component for the 50/30/20 cards
-const AnalysisCard = ({ title, current, target, color, label, isMinimum = false }: any) => {
-  const diff = current - target;
-  const isNegative = isMinimum ? diff < -5 : diff > 5; 
-  
-  const colors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-700 border-blue-100',
-    red: 'bg-red-50 text-red-700 border-red-100',
-    amber: 'bg-amber-50 text-amber-700 border-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  };
-
-  return (
-    <div className={`p-4 rounded-lg border ${colors[color]} transition-all hover:shadow-sm`}>
-      <div className="flex justify-between items-start mb-2">
-        <span className="text-sm font-bold">{title}</span>
-        <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm opacity-80 font-mono font-bold">{Math.round(current)}%</span>
-      </div>
-      <div className="w-full bg-white/50 h-2 rounded-full mb-2 overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all duration-1000 ease-out bg-current`} 
-          style={{ width: `${Math.min(current, 100)}%` }}
-        ></div>
-      </div>
-      {isNegative ? (
-        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
-          <AlertCircle size={12} className="mt-0.5 shrink-0" />
-          <span>
-             {isMinimum 
-               ? `أقل من الهدف بـ ${Math.abs(Math.round(diff))}%` 
-               : `أعلى من الهدف بـ ${Math.round(diff)}%`}
-          </span>
-        </div>
-      ) : (
-        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
-          <CheckCircle2 size={12} className="mt-0.5 shrink-0" />
-          <span>ضمن النطاق المثالي</span>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default App;
