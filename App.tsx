@@ -6,7 +6,7 @@ import { AddExpenseForm } from './components/AddExpenseForm';
 import { PrintableReport } from './components/PrintableReport';
 import { Expense, ExpenseType, DashboardMetrics } from './types';
 import { GUIDANCE_TEXT } from './constants';
-import { Download, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Download, Info, AlertCircle, CheckCircle2, Plus } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -16,6 +16,7 @@ function App() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [showContent, setShowContent] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Initialize from LocalStorage or Defaults
   useEffect(() => {
@@ -63,15 +64,31 @@ function App() {
   }, [expenses, salary]);
 
   // Handlers
+  const handleOpenAddModal = () => {
+    setEditingExpense(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (expense: Expense) => {
+    setEditingExpense(expense);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setEditingExpense(null), 300); // Clear after animation
+  };
+
   const handleAddExpense = (newExpenseData: Omit<Expense, 'id'>) => {
     const newExpense = { ...newExpenseData, id: Date.now().toString() };
     setExpenses(prev => [newExpense, ...prev]);
+    handleCloseModal();
     return true;
   };
 
   const handleUpdateExpense = (updatedExpense: Expense) => {
     setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? updatedExpense : e));
-    setEditingExpense(null);
+    handleCloseModal();
     return true;
   };
 
@@ -290,24 +307,22 @@ function App() {
               </div>
             </div>
 
-            {/* Add/Edit Form */}
-            <div data-html2canvas-ignore>
-               <AddExpenseForm 
-                 salary={salary} 
-                 currentTotal={metrics.totalExpenses}
-                 expenses={expenses}
-                 onAdd={handleAddExpense}
-                 editingExpense={editingExpense}
-                 onUpdate={handleUpdateExpense}
-                 onCancelEdit={() => setEditingExpense(null)}
-               />
+            {/* Action Bar (Add Button) */}
+            <div data-html2canvas-ignore className="flex justify-end">
+              <button 
+                onClick={handleOpenAddModal}
+                className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-105 font-bold text-lg"
+              >
+                <Plus size={24} />
+                <span>إضافة مصروف جديد</span>
+              </button>
             </div>
 
             {/* Table */}
             {expenses.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 animate-fade-in">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-                   <h3 className="font-bold text-gray-800">تفاصيل المصارف</h3>
+                   <h3 className="font-bold text-gray-800">تفاصيل المصروفات</h3>
                    <span className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full shadow-sm">
                      {expenses.length} بند
                    </span>
@@ -316,7 +331,7 @@ function App() {
                   expenses={expenses} 
                   salary={salary} 
                   onDelete={handleDeleteExpense} 
-                  onEdit={setEditingExpense}
+                  onEdit={handleOpenEditModal}
                 />
               </div>
             )}
@@ -324,6 +339,29 @@ function App() {
         )}
 
       </main>
+
+      {/* Modal for Add/Edit Expense */}
+      {isModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => {
+             // Close if clicking outside the form
+             if (e.target === e.currentTarget) handleCloseModal();
+          }}
+        >
+          <div className="w-full max-w-2xl animate-[fadeIn_0.3s_ease-out]">
+            <AddExpenseForm 
+              salary={salary} 
+              currentTotal={metrics.totalExpenses}
+              expenses={expenses}
+              onAdd={handleAddExpense}
+              editingExpense={editingExpense}
+              onUpdate={handleUpdateExpense}
+              onCancelEdit={handleCloseModal}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Footer Credits */}
       <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
