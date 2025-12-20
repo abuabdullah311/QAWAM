@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { StickyHeader } from './components/StickyHeader';
 import { FinancialChart } from './components/FinancialChart';
 import { TargetVsActualChart } from './components/TargetVsActualChart';
@@ -255,7 +256,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-32 relative">
+    <>
+      <div className="min-h-screen bg-slate-50 font-sans pb-32 relative">
       <StickyHeader salary={salary} metrics={metrics} onReset={handleReset} />
 
       {/* 
@@ -373,7 +375,7 @@ function App() {
             {expenses.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 animate-fade-in">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-                   <h3 className="font-bold text-gray-800">تفاصيل المصروفات</h3>
+                   <h3 className="font-bold text-gray-800">تفاصيل ��لمصروفات</h3>
                    <span className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full shadow-sm">
                      {expenses.length} بند
                    </span>
@@ -452,6 +454,8 @@ function App() {
       )}
 
     </div>
+    <Analytics />
+    </>
   );
 }
 
