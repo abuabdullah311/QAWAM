@@ -344,4 +344,22 @@ function App() {
       {/* Floating Action Button */}
       {showContent && (
         <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3" data-html2canvas-ignore>
-          <button onClick={exportPDF} disabled={isExporting} className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-
+          <button onClick={exportPDF} disabled={isExporting} className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group ${isExporting ? 'opacity-70 cursor-wait' : ''}`}>
+            <div className="bg-white/10 p-2 rounded-lg">
+              {isExporting ? <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={20} />}
+            </div>
+            <div className="text-right">
+              <span className="block font-bold text-sm">{isExporting ? 'جاري التصدير...' : 'حفظ PDF'}</span>
+              <span className="block text-[10px] text-slate-300 opacity-80">تقرير شامل</span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* 2. إضافة مكون التحليلات هنا */}
+      <Analytics />
+    </div>
+  );
+}
+
+export default App;
