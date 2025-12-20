@@ -344,4 +344,17 @@ function App() {
       {/* Floating Action Button */}
       {showContent && (
         <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3" data-html2canvas-ignore>
-          <button onClick={exportPDF} disabled={isExporting} className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-
+          <button onClick={exportPDF} disabled={isExporting} className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-lg flex items-center gap-2 transition-all ${isExporting ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'} font-bold`}>
+            <Download size={20} />
+            <span className="hidden md:inline">{isExporting ? 'جاري التحضير...' : 'تصدير PDF'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Analytics Component */}
+      <Analytics />
+    </div>
+  );
+}
+
+export default App;
