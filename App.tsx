@@ -10,6 +10,8 @@ import { GUIDANCE_TEXT } from './constants';
 import { Download, Info, AlertCircle, CheckCircle2, Plus } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+// 1. إضافة سطر الاستيراد هنا
+import { Analytics } from "@vercel/analytics/react";
 
 // Helper Component defined as function
 function AnalysisCard({ title, current, target, color, label, isMinimum = false }: any) {
@@ -152,18 +154,15 @@ function App() {
     }
   };
 
-  // Robust PDF Export with Multi-page support
+  // Robust PDF Export
   const exportPDF = async () => {
     setIsExporting(true);
     try {
       const input = document.getElementById('printable-report');
-      if (!input) {
-        throw new Error('Printable report element not found');
-      }
+      if (!input) throw new Error('Printable report element not found');
 
-      // Generate canvas from the hidden fixed-width container
       const canvas = await html2canvas(input, {
-        scale: 2, // High resolution
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff'
@@ -172,18 +171,16 @@ function App() {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       
-      const imgWidth = 210; // A4 Width in mm
-      const pageHeight = 297; // A4 Height in mm
+      const imgWidth = 210;
+      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
       let position = 0;
 
-      // First Page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
-      // Add extra pages if content overflows
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
@@ -200,7 +197,6 @@ function App() {
     }
   };
 
-  // 50/30/20 Analysis Logic
   const getAnalysis = () => {
     if (salary === 0) return null;
     const needPct = (metrics.totalNeeds / salary) * 100;
@@ -227,28 +223,9 @@ function App() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <AnalysisCard 
-            title="الاحتياج (الهدف 50%)" 
-            current={needPct} 
-            target={50} 
-            color="red"
-            label={ExpenseType.NEED}
-          />
-          <AnalysisCard 
-            title="الرغبات (الهدف 30%)" 
-            current={wantPct} 
-            target={30} 
-            color="amber"
-            label={ExpenseType.WANT} 
-          />
-          <AnalysisCard 
-            title="الادخار (الهدف 20%)" 
-            current={savePct} 
-            target={20} 
-            color="emerald" 
-            label={ExpenseType.SAVING}
-            isMinimum
-          />
+          <AnalysisCard title="الاحتياج (الهدف 50%)" current={needPct} target={50} color="red" label={ExpenseType.NEED} />
+          <AnalysisCard title="الرغبات (الهدف 30%)" current={wantPct} target={30} color="amber" label={ExpenseType.WANT}  />
+          <AnalysisCard title="الادخار (الهدف 20%)" current={savePct} target={20} color="emerald" label={ExpenseType.SAVING} isMinimum />
         </div>
       </div>
     );
@@ -258,33 +235,19 @@ function App() {
     <div className="min-h-screen bg-slate-50 font-sans pb-32 relative">
       <StickyHeader salary={salary} metrics={metrics} onReset={handleReset} />
 
-      {/* 
-        HIDDEN PRINTABLE REPORT 
-        Positioned fixed off-screen to ensure it renders in desktop width (794px)
-        even on mobile devices, ensuring high quality PDF export.
-      */}
       <div style={{ position: 'fixed', left: '-10000px', top: 0, zIndex: -5, overflow: 'hidden' }}>
         <PrintableReport salary={salary} metrics={metrics} expenses={expenses} />
       </div>
 
       <main className="max-w-4xl mx-auto px-4">
-        
         {/* Top Section: Salary Input */}
         <div className={`transition-all duration-700 ease-in-out ${salary === 0 ? 'min-h-[60vh] flex flex-col justify-center items-center' : 'mb-6'}`}>
-          
           <div className={`w-full ${salary === 0 ? 'max-w-xl text-center' : 'grid grid-cols-1 md:grid-cols-2 gap-6'}`}>
-            
-            {/* Salary Input Card */}
             <section className={`bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden transition-all duration-500 ${salary === 0 ? 'shadow-xl scale-105 border-blue-200' : 'h-full flex flex-col justify-center'}`}>
-              
-              {salary === 0 && (
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
-              )}
-
+              {salary === 0 && <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500"></div>}
               <label className={`block font-bold text-gray-800 mb-3 ${salary === 0 ? 'text-xl' : 'text-sm'}`}>
                 {salary === 0 ? 'خطوتك الأولى: أدخل صافي راتبك 💰' : 'صافي الراتب الشهري'}
               </label>
-              
               <div className="relative">
                 <input
                   type="number"
@@ -296,58 +259,38 @@ function App() {
                 />
                 <span className={`absolute text-gray-400 font-medium ${salary === 0 ? 'left-4 bottom-6 text-lg' : 'left-0 bottom-3'}`}>ريال</span>
               </div>
-              
-              <div className={`flex items-start gap-2 mt-4 bg-blue-50/50 p-3 rounded-lg border border-blue-100/50 ${salary === 0 ? 'justify-center' : ''}`}>
-                <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  المقصود هو الراتب الشهري الصافي الذي يتم إيداعه في الحساب البنكي شهرياً.
-                </p>
-              </div>
             </section>
-
-            {/* Quick Guide - Only visible when dashboard is active */}
             {salary > 0 && (
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 h-full flex flex-col justify-center animate-fade-in">
                 <div className="flex items-center gap-2 mb-2 text-blue-800">
                     <Info size={20} />
                     <h3 className="font-bold">إرشادات سريعة</h3>
                 </div>
-                <p className="text-sm text-blue-700 leading-relaxed whitespace-pre-line">
-                  {GUIDANCE_TEXT}
-                </p>
+                <p className="text-sm text-blue-700 leading-relaxed whitespace-pre-line">{GUIDANCE_TEXT}</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Dashboard Content - Hidden until Salary > 0 */}
+        {/* Dashboard Content */}
         {showContent && (
           <div className="fade-in space-y-6">
-            
-            {/* Charts & Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 flex flex-col gap-4">
                  <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                     <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">التوزيع الحالي</h3>
                     <FinancialChart metrics={metrics} />
                  </div>
-                 
                  <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                    <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">مقارنة المستهدف (رمادي) بالفعلي</h3>
+                    <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">مقارنة المستهدف بالفعلي</h3>
                     <TargetVsActualChart salary={salary} metrics={metrics} />
                  </div>
               </div>
-              
               <div className="lg:col-span-2 flex flex-col gap-6">
-                 {/* 50/30/20 Indicators */}
                  {getAnalysis()}
-                 
-                 {/* Quick Stats Box */}
                  <div className="bg-indigo-900 text-white rounded-xl p-6 shadow-lg flex flex-col justify-center h-full min-h-[140px]">
                     <h4 className="text-indigo-200 text-sm font-medium mb-1">الادخار والاستثمار الكلي</h4>
                     <div className="text-4xl font-bold mb-2">{metrics.totalSavingsCalculated.toLocaleString()} <span className="text-lg font-normal text-indigo-300">ريال</span></div>
-                    <p className="text-xs text-indigo-300 mb-4">يشمل المبالغ المصنفة كادخار + المتبقي من الراتب</p>
-                    
                     {metrics.remainingSalary > 0 && (
                        <div className="bg-indigo-800/50 rounded px-3 py-2 text-sm flex items-center gap-2 w-fit">
                           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
@@ -358,101 +301,47 @@ function App() {
               </div>
             </div>
 
-            {/* Action Bar (Add Button) */}
             <div data-html2canvas-ignore className="flex justify-end">
-              <button 
-                onClick={handleOpenAddModal}
-                className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-105 font-bold text-lg"
-              >
+              <button onClick={handleOpenAddModal} className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-105 font-bold text-lg">
                 <Plus size={24} />
                 <span>إضافة مصروف جديد</span>
               </button>
             </div>
 
-            {/* Table */}
             {expenses.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 animate-fade-in">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
                    <h3 className="font-bold text-gray-800">تفاصيل المصروفات</h3>
-                   <span className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full shadow-sm">
-                     {expenses.length} بند
-                   </span>
+                   <span className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full shadow-sm">{expenses.length} بند</span>
                 </div>
-                <ExpenseTable 
-                  expenses={expenses} 
-                  salary={salary} 
-                  onDelete={handleDeleteExpense} 
-                  onEdit={handleOpenEditModal}
-                />
+                <ExpenseTable expenses={expenses} salary={salary} onDelete={handleDeleteExpense} onEdit={handleOpenEditModal} />
               </div>
             )}
           </div>
         )}
-
       </main>
 
-      {/* Modal for Add/Edit Expense */}
+      {/* Modal */}
       {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
-          onClick={(e) => {
-             // Close if clicking outside the form
-             if (e.target === e.currentTarget) handleCloseModal();
-          }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={(e) => e.target === e.currentTarget && handleCloseModal()}>
           <div className="w-full max-w-2xl animate-[fadeIn_0.3s_ease-out]">
-            <AddExpenseForm 
-              salary={salary} 
-              currentTotal={metrics.totalExpenses}
-              expenses={expenses}
-              onAdd={handleAddExpense}
-              editingExpense={editingExpense}
-              onUpdate={handleUpdateExpense}
-              onCancelEdit={handleCloseModal}
-            />
+            <AddExpenseForm salary={salary} currentTotal={metrics.totalExpenses} expenses={expenses} onAdd={handleAddExpense} editingExpense={editingExpense} onUpdate={handleUpdateExpense} onCancelEdit={handleCloseModal} />
           </div>
         </div>
       )}
 
-      {/* Footer Credits */}
+      {/* Footer */}
       <footer className="mt-12 py-6 text-center text-slate-400 text-xs border-t border-slate-200">
         <p className="mb-2">تم التطوير بواسطة</p>
         <div className="flex justify-center mb-2">
-           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer" className="inline-block transition-transform hover:scale-105">
-             <img src="./ashareef_logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80 hover:opacity-100 transition-opacity" />
+           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="inline-block transition-transform hover:scale-105">
+             <img src="./ashareef_logo.png" alt="Developer Logo" className="h-16 object-contain opacity-80" />
            </a>
         </div>
         <p className="opacity-70">© {new Date().getFullYear()} قوام. جميع الحقوق محفوظة.</p>
       </footer>
 
-      {/* Floating Action Button - PDF Only */}
+      {/* Floating Action Button */}
       {showContent && (
         <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3" data-html2canvas-ignore>
-          <button 
-            onClick={exportPDF}
-            disabled={isExporting}
-            className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 group ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
-            title="حفظ التقرير كامل كـ PDF"
-          >
-            <div className="bg-white/10 p-2 rounded-lg">
-              {isExporting ? (
-                 <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-              ) : (
-                 <div className="text-2xl font-bold"><Download size={20} /></div>
-              )}
-            </div>
-            <div className="text-right">
-              <span className="block font-bold text-sm">
-                {isExporting ? 'جاري التصدير...' : 'حفظ PDF'}
-              </span>
-              <span className="block text-[10px] text-slate-300 opacity-80 group-hover:opacity-100">تقرير شامل</span>
-            </div>
-          </button>
-        </div>
-      )}
-
-    </div>
-  );
-}
-
-export default App;
+          <button onClick={exportPDF} disabled={isExporting} className={`bg-slate-800 hover:bg-slate-900 text-white p-3 md:px-6 rounded-xl shadow-
