@@ -49,7 +49,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
                 <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 sm:px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold animate-fade-in">
                     <Users size={12} />
                     <span>{visitorCount.toLocaleString()}</span>
-                    <span className="hidden xs:inline">{t.visitors}</span>
+                    <span>{t.visitors}</span>
                 </div>
             </div>
 
