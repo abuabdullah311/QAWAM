@@ -51,7 +51,7 @@ export const COLORS = {
   target: '#94a3b8' // Slate-400 for Target Bars
 };
 
-export const GUIDANCE_TEXT = `
+export const GUIDANCE_TEXT_AR = `
 1. أدخل صافي راتبك في الحقل المخصص.
 2. أضف مصاريفك من القائمة وسيتم تصنيفها تلقائياً (مع إمكانية التعديل).
 3. مفاهيم التصنيف:
@@ -60,3 +60,106 @@ export const GUIDANCE_TEXT = `
    • ادخار واستثمار: مبلغ للأمان المالي أو لتنمية المال.
 4. راقب المؤشرات الرسومية لمقارنة وضعك الحالي مع الوضع المثالي (50/30/20).
 `;
+
+export const GUIDANCE_TEXT_EN = `
+1. Enter your net salary.
+2. Add your expenses from the list or manually.
+3. Classification Concepts:
+   • Need: Essential expenses.
+   • Want: Expenses that can be deferred or reduced.
+   • Savings: Money for security or investment.
+4. Monitor charts to compare your status with the ideal 50/30/20 rule.
+`;
+
+export const TRANSLATIONS = {
+  ar: {
+    appTitle: "قَوَام",
+    step1: "الراتب",
+    step2: "المصاريف",
+    step3: "النتائج",
+    salaryLabel: "صافي الراتب الشهري",
+    currency: "ريال",
+    salaryPlaceholder: "0",
+    salaryHint: "المقصود هو الراتب الشهري الصافي الذي يتم إيداعه في الحساب البنكي شهرياً.",
+    next: "التالي",
+    back: "السابق",
+    finish: "عرض النتائج",
+    addExpense: "إضافة مصروف جديد",
+    expensesTitle: "قائمة المصروفات",
+    noExpenses: "لم يتم إضافة مصروفات بعد.",
+    edit: "تعديل",
+    delete: "حذف",
+    expenseName: "اسم المصروف",
+    expenseAmount: "المبلغ",
+    expenseType: "النوع",
+    notes: "ملاحظات",
+    save: "حفظ",
+    cancel: "إلغاء",
+    reset: "بدء جديد",
+    exportPDF: "حفظ التقرير PDF",
+    exporting: "جاري التصدير...",
+    needs: "الاحتياجات",
+    wants: "الرغبات",
+    savings: "الادخار",
+    remaining: "المتبقي",
+    totalExpenses: "المصروفات",
+    savingsRate: "معدل الادخار",
+    visitors: "مستفيد",
+    guidanceTitle: "إرشادات سريعة",
+    guidanceText: GUIDANCE_TEXT_AR,
+    adviceTitle: "توصية الخبير",
+    errorSalaryExceeded: "عفواً، إضافة هذا المبلغ ستتجاوز الراتب.",
+    balancedMessage: "أحسنت! توزيعك المالي متوازن.",
+    target: "الهدف",
+    actual: "الفعلي",
+    belowTarget: "أقل من الهدف بـ",
+    aboveTarget: "أعلى من الهدف بـ",
+    idealRange: "ضمن النطاق المثالي",
+    developedBy: "تم التطوير بواسطة"
+  },
+  en: {
+    appTitle: "QAWAM",
+    step1: "Salary",
+    step2: "Expenses",
+    step3: "Dashboard",
+    salaryLabel: "Net Monthly Salary",
+    currency: "SAR",
+    salaryPlaceholder: "0",
+    salaryHint: "The net monthly salary deposited into your bank account.",
+    next: "Next",
+    back: "Back",
+    finish: "View Results",
+    addExpense: "Add New Expense",
+    expensesTitle: "Expenses List",
+    noExpenses: "No expenses added yet.",
+    edit: "Edit",
+    delete: "Delete",
+    expenseName: "Expense Name",
+    expenseAmount: "Amount",
+    expenseType: "Type",
+    notes: "Notes",
+    save: "Save",
+    cancel: "Cancel",
+    reset: "Reset",
+    exportPDF: "Save as PDF",
+    exporting: "Exporting...",
+    needs: "Needs",
+    wants: "Wants",
+    savings: "Savings",
+    remaining: "Remaining",
+    totalExpenses: "Total Expenses",
+    savingsRate: "Savings Rate",
+    visitors: "Users",
+    guidanceTitle: "Quick Guide",
+    guidanceText: GUIDANCE_TEXT_EN,
+    adviceTitle: "Expert Advice",
+    errorSalaryExceeded: "Sorry, adding this amount exceeds your salary.",
+    balancedMessage: "Great! Your financial distribution is balanced.",
+    target: "Target",
+    actual: "Actual",
+    belowTarget: "Below target by",
+    aboveTarget: "Above target by",
+    idealRange: "Within ideal range",
+    developedBy: "Developed by"
+  }
+};

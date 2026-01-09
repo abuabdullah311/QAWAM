@@ -4,6 +4,14 @@ export enum ExpenseType {
   SAVING = 'ادخار واستثمار'
 }
 
+export enum AppStep {
+  SALARY = 1,
+  EXPENSES = 2,
+  DASHBOARD = 3
+}
+
+export type Language = 'ar' | 'en';
+
 export interface Expense {
   id: string;
   name: string;
