@@ -266,7 +266,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-36 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 font-sans pb-28 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
       <StickyHeader 
         salary={salary} 
         metrics={metrics} 
@@ -412,13 +412,22 @@ function App() {
                     </div>
                  </div>
 
-                 <div className="flex gap-4">
+                 <div className="flex flex-col sm:flex-row gap-4">
                      <button 
                         onClick={handlePrevStep}
-                        className="flex-1 bg-white border-2 border-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 flex justify-center items-center gap-2 transition-all hover:border-gray-200"
+                        className="flex-1 bg-white border-2 border-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 flex justify-center items-center gap-2 transition-all hover:border-gray-200 shadow-sm"
                      >
                         <Edit2 size={16} />
                         {t.edit} {t.step2}
+                     </button>
+
+                     <button 
+                        onClick={exportPDF}
+                        disabled={isExporting}
+                        className={`flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 flex justify-center items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+                     >
+                        {isExporting ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={16} />}
+                        <span>{t.exportPDF}</span>
                      </button>
                  </div>
               </div>
@@ -471,25 +480,13 @@ function App() {
       )}
 
       {/* Persistent Footer - Centered always */}
-      <footer className="fixed bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 py-4 px-4 shadow-[0_-5px_25px_rgba(0,0,0,0.03)] z-40 flex flex-col sm:flex-row justify-center items-center gap-3 transition-all">
-        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
+      <footer className="fixed bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 py-3 px-4 shadow-[0_-5px_25px_rgba(0,0,0,0.03)] z-40 flex justify-center items-center transition-all">
+        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50/50 px-4 py-1.5 rounded-full border border-slate-100/50">
            <span>{t.developedBy}</span>
            <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
-             <img src="./ashareef_logo.png" alt="Logo" className="h-6 object-contain" />
+             <img src="./ashareef_logo.png" alt="Logo" className="h-5 object-contain" />
            </a>
         </div>
-
-        {/* Export Button (Visible on Dashboard) */}
-        {step === AppStep.DASHBOARD && (
-             <button 
-             onClick={exportPDF}
-             disabled={isExporting}
-             className={`bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-full shadow-lg flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
-           >
-             {isExporting ? <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={14} />}
-             <span className="font-bold text-xs">{t.exportPDF}</span>
-           </button>
-        )}
       </footer>
 
     </div>
