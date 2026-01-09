@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Expense, ExpenseType } from '../types';
-import { EXPENSE_TYPES, SUGGESTED_EXPENSES, EXPENSE_MAPPING } from '../constants';
+import { Expense, ExpenseType, Language } from '../types';
+import { EXPENSE_TYPES, SUGGESTED_EXPENSES, EXPENSE_MAPPING, TRANSLATIONS } from '../constants';
 import { PlusCircle, Save, X, AlertTriangle } from 'lucide-react';
 
 interface AddExpenseFormProps {
@@ -11,6 +11,7 @@ interface AddExpenseFormProps {
   editingExpense?: Expense | null;
   onUpdate: (updatedExpense: Expense) => boolean;
   onCancelEdit: () => void;
+  lang: Language;
 }
 
 export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ 
@@ -20,8 +21,10 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   onAdd, 
   editingExpense,
   onUpdate,
-  onCancelEdit
+  onCancelEdit,
+  lang
 }) => {
+  const t = TRANSLATIONS[lang];
   const [name, setName] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [type, setType] = useState<ExpenseType>(ExpenseType.NEED);
@@ -29,7 +32,6 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [advice, setAdvice] = useState<string | null>(null);
 
-  // Load editing expense data
   useEffect(() => {
     if (editingExpense) {
       setName(editingExpense.name);
@@ -41,11 +43,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
     }
   }, [editingExpense]);
 
-  // Auto-Categorization Effect
   useEffect(() => {
-    // Only auto-categorize if NOT editing an existing expense (to preserve manual overrides on existing items),
-    // OR if the user changes the name while editing.
-    // Here we check if the current name exists in our mapping
     if (name && EXPENSE_MAPPING[name]) {
        setType(EXPENSE_MAPPING[name]);
     }
@@ -56,13 +54,11 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
     const numAmount = parseFloat(amount);
     if (!name || isNaN(numAmount) || numAmount <= 0) return;
 
-    // Check budget limit
     const amountDiff = editingExpense ? numAmount - editingExpense.amount : numAmount;
     if (currentTotal + amountDiff > salary) {
       const deficit = (currentTotal + amountDiff) - salary;
-      setError(`عفواً، إضافة هذا المبلغ ستتجاوز الراتب بمقدار ${deficit.toLocaleString()}.`);
+      setError(`${t.errorSalaryExceeded} (${deficit.toLocaleString()})`);
       
-      // --- Smart Expert Advice Logic ---
       const otherExpenses = expenses.filter(e => editingExpense ? e.id !== editingExpense.id : true);
       const currentWants = otherExpenses.filter(e => e.type === ExpenseType.WANT).reduce((sum, e) => sum + e.amount, 0);
       const wantsPct = (currentWants / salary) * 100;
@@ -71,20 +67,24 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
         .filter(e => e.type === ExpenseType.WANT)
         .sort((a, b) => b.amount - a.amount)[0];
 
-      const largestNeed = otherExpenses
-        .filter(e => e.type === ExpenseType.NEED)
-        .sort((a, b) => b.amount - a.amount)[0];
-
       let generatedAdvice = "";
 
-      if (wantsPct > 30 && largestWant) {
-        generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}% بينما الموصى به 30%). لإتاحة المجال لهذا المصروف، نقترح عليك تقليل بند "${largestWant.name}" بمقدار ${deficit.toLocaleString()}.`;
-      } else if (largestWant) {
-        generatedAdvice = `توصية الخبير: لإضافة هذا المصروف، ابدأ بتقليل الكماليات. هل يمكنك تخفيض بند "${largestWant.name}"؟`;
-      } else if (largestNeed) {
-         generatedAdvice = `توصية الخبير: ميزانيتك مضغوطة جداً وتتكون معظمها من احتياجات. راجع بند "${largestNeed.name}" إن كان يمكن استبداله ببديل أقل تكلفة لتوفير ${deficit.toLocaleString()}.`;
+      if (lang === 'ar') {
+        if (wantsPct > 30 && largestWant) {
+            generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}%). جرب تقليل بند "${largestWant.name}".`;
+        } else if (largestWant) {
+            generatedAdvice = `توصية الخبير: حاول تقليل الكماليات مثل "${largestWant.name}".`;
+        } else {
+            generatedAdvice = `توصية الخبير: ميزانيتك مضغوطة. راجع مصروفاتك.`;
+        }
       } else {
-         generatedAdvice = `توصية الخبير: حاول تقليل أي مصروف آخر بمقدار ${deficit.toLocaleString()} لإتمام العملية.`;
+        if (wantsPct > 30 && largestWant) {
+            generatedAdvice = `Expert Tip: Your 'Wants' are high (${Math.round(wantsPct)}%). Try reducing "${largestWant.name}".`;
+        } else if (largestWant) {
+            generatedAdvice = `Expert Tip: Try reducing luxuries like "${largestWant.name}".`;
+        } else {
+            generatedAdvice = `Expert Tip: Your budget is tight. Review your needs.`;
+        }
       }
 
       setAdvice(generatedAdvice);
@@ -113,7 +113,6 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   const handleSuggestionSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (e.target.value) {
       setName(e.target.value);
-      // Logic for type update is handled by the useEffect dependent on 'name'
     }
   };
 
@@ -126,12 +125,14 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
      }
   };
 
+  const isRtl = lang === 'ar';
+
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl">
+    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center mb-6 pb-2 border-b border-gray-100">
         <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
           {editingExpense ? <Edit2Icon /> : <PlusCircleIcon />}
-          {editingExpense ? 'تعديل المصروف' : 'إضافة مصروف جديد'}
+          {editingExpense ? (lang === 'ar' ? 'تعديل المصروف' : 'Edit Expense') : t.addExpense}
         </h3>
         <button 
           onClick={onCancelEdit}
@@ -144,51 +145,50 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           
-          {/* Name Input with Helper Select */}
           <div className="flex flex-col gap-2">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">اسم المصروف</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseName}</label>
               
-              <select 
-                onChange={handleSuggestionSelect}
-                className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none cursor-pointer"
-                defaultValue=""
-              >
-                <option value="" disabled>↓ اختر من القائمة المقترحة</option>
-                {SUGGESTED_EXPENSES.map((s, i) => (
-                  <option key={i} value={s}>{s}</option>
-                ))}
-              </select>
+              {lang === 'ar' && (
+                  <select 
+                    onChange={handleSuggestionSelect}
+                    className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none cursor-pointer"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>↓ اختر من القائمة المقترحة</option>
+                    {SUGGESTED_EXPENSES.map((s, i) => (
+                      <option key={i} value={s}>{s}</option>
+                    ))}
+                  </select>
+              )}
 
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder="أو اكتب الاسم هنا..."
+                placeholder={lang === 'ar' ? "أو اكتب الاسم هنا..." : "Expense name..."}
                 required
                 autoFocus={!editingExpense}
               />
             </div>
           </div>
 
-          {/* Amount */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">المبلغ</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseAmount}</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all mt-[29px]"
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${lang==='ar' ? 'mt-[29px]' : ''}`}
               placeholder="0.00"
               min="0"
               required
             />
           </div>
 
-          {/* Type */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">النوع</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseType}</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as ExpenseType)}
@@ -200,24 +200,22 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
             </select>
           </div>
 
-          {/* Notes */}
           <div>
-             <label className="block text-xs font-semibold text-gray-500 mb-1">ملاحظات</label>
+             <label className="block text-xs font-semibold text-gray-500 mb-1">{t.notes}</label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all md:mt-[29px]"
-              placeholder="اختياري"
+              placeholder={lang === 'ar' ? "اختياري" : "Optional"}
             />
           </div>
         </div>
 
-        {/* Error & Advice Block */}
         {error && (
           <div className="bg-red-50 border-r-4 border-red-500 p-4 rounded-md animate-pulse">
             <div className="flex items-start">
-              <AlertTriangle className="text-red-500 ml-2 mt-0.5" size={18} />
+              <AlertTriangle className="text-red-500 ltr:mr-2 rtl:ml-2 mt-0.5" size={18} />
               <div>
                 <p className="text-sm font-bold text-red-700">{error}</p>
                 {advice && <p className="text-sm text-red-600 mt-1 bg-white/50 p-2 rounded">{advice}</p>}
@@ -232,14 +230,14 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
               onClick={onCancelEdit}
               className="px-6 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
             >
-              إلغاء
+              {t.cancel}
             </button>
           <button
             type="submit"
             className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition-colors flex items-center gap-2"
           >
             {editingExpense ? <Save size={18} /> : <PlusCircle size={18} />}
-            {editingExpense ? 'حفظ التعديلات' : 'إضافة المصروف'}
+            {editingExpense ? t.save : t.addExpense}
           </button>
         </div>
       </form>
