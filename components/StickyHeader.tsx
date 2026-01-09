@@ -27,6 +27,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   
   const steps = [
     { id: AppStep.SALARY, label: t.step1 },
+    { id: AppStep.ADVISOR, label: t.advisorStep },
     { id: AppStep.EXPENSES, label: t.step2 },
     { id: AppStep.DASHBOARD, label: t.step3 },
   ];
@@ -75,10 +76,10 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
             </div>
 
             {/* Step Progress */}
-            <div className="flex items-center w-full md:w-auto justify-center bg-gray-50/50 p-2 rounded-2xl border border-gray-100 shadow-inner">
+            <div className="flex items-center w-full md:w-auto justify-center bg-gray-50/50 p-2 rounded-2xl border border-gray-100 shadow-inner overflow-x-auto">
                 {steps.map((step, idx) => (
                     <React.Fragment key={step.id}>
-                        <div className={`flex flex-col items-center relative z-10 px-2 sm:px-4 ${currentStep >= step.id ? 'text-blue-600' : 'text-gray-300'}`}>
+                        <div className={`flex flex-col items-center relative z-10 px-2 sm:px-4 min-w-[60px] ${currentStep >= step.id ? 'text-blue-600' : 'text-gray-300'}`}>
                             <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-500 shadow-sm ${
                                 currentStep >= step.id 
                                 ? 'bg-blue-600 text-white border-blue-600 shadow-blue-200' 
@@ -86,10 +87,10 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
                             }`}>
                                 {step.id}
                             </div>
-                            <span className="text-[10px] sm:text-xs font-bold mt-1">{step.label}</span>
+                            <span className="text-[10px] sm:text-xs font-bold mt-1 whitespace-nowrap">{step.label}</span>
                         </div>
                         {idx < steps.length - 1 && (
-                            <div className={`h-0.5 w-10 sm:w-16 -mt-5 transition-colors duration-500 ${currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+                            <div className={`h-0.5 w-6 sm:w-10 -mt-5 transition-colors duration-500 ${currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
                         )}
                     </React.Fragment>
                 ))}

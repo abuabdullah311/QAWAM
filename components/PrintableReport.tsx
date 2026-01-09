@@ -1,5 +1,5 @@
 import React from 'react';
-import { DashboardMetrics, Expense, ExpenseType, Language } from '../types';
+import { DashboardMetrics, Expense, ExpenseType, Language, BudgetRule } from '../types';
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { COLORS, TRANSLATIONS, EXPENSE_TYPE_LABELS } from '../constants';
 
@@ -8,9 +8,16 @@ interface PrintableReportProps {
   metrics: DashboardMetrics;
   expenses: Expense[];
   lang: Language;
+  budgetRule?: BudgetRule;
 }
 
-export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metrics, expenses, lang }) => {
+export const PrintableReport: React.FC<PrintableReportProps> = ({ 
+  salary, 
+  metrics, 
+  expenses, 
+  lang,
+  budgetRule = { needs: 50, wants: 30, savings: 20 }
+}) => {
   const t = TRANSLATIONS[lang];
   const isRtl = lang === 'ar';
 
@@ -24,9 +31,9 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
   // Bar Chart Data
   const getPercent = (val: number) => salary > 0 ? parseFloat(((val / salary) * 100).toFixed(1)) : 0;
   const barData = [
-    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED], actual: getPercent(metrics.totalNeeds), target: 50, color: COLORS[ExpenseType.NEED] },
-    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT], actual: getPercent(metrics.totalWants), target: 30, color: COLORS[ExpenseType.WANT] },
-    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING], actual: getPercent(metrics.totalSavingsCalculated), target: 20, color: COLORS[ExpenseType.SAVING] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED], actual: getPercent(metrics.totalNeeds), target: budgetRule.needs, color: COLORS[ExpenseType.NEED] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT], actual: getPercent(metrics.totalWants), target: budgetRule.wants, color: COLORS[ExpenseType.WANT] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING], actual: getPercent(metrics.totalSavingsCalculated), target: budgetRule.savings, color: COLORS[ExpenseType.SAVING] },
   ];
 
   const today = new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {

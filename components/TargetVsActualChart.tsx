@@ -1,15 +1,21 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
-import { DashboardMetrics, ExpenseType, Language } from '../types';
+import { DashboardMetrics, ExpenseType, Language, BudgetRule } from '../types';
 import { COLORS, EXPENSE_TYPE_LABELS } from '../constants';
 
 interface TargetVsActualChartProps {
   salary: number;
   metrics: DashboardMetrics;
   lang: Language;
+  budgetRule?: BudgetRule;
 }
 
-export const TargetVsActualChart: React.FC<TargetVsActualChartProps> = ({ salary, metrics, lang }) => {
+export const TargetVsActualChart: React.FC<TargetVsActualChartProps> = ({ 
+  salary, 
+  metrics, 
+  lang,
+  budgetRule = { needs: 50, wants: 30, savings: 20 }
+}) => {
   if (salary === 0) return null;
 
   const getPercent = (val: number) => parseFloat(((val / salary) * 100).toFixed(1));
@@ -18,19 +24,19 @@ export const TargetVsActualChart: React.FC<TargetVsActualChartProps> = ({ salary
     {
       name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED],
       actual: getPercent(metrics.totalNeeds),
-      target: 50,
+      target: budgetRule.needs,
       color: COLORS[ExpenseType.NEED]
     },
     {
       name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT],
       actual: getPercent(metrics.totalWants),
-      target: 30,
+      target: budgetRule.wants,
       color: COLORS[ExpenseType.WANT]
     },
     {
       name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING],
       actual: getPercent(metrics.totalSavingsCalculated),
-      target: 20,
+      target: budgetRule.savings,
       color: COLORS[ExpenseType.SAVING]
     },
   ];
