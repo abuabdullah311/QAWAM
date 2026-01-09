@@ -6,7 +6,21 @@ export const EXPENSE_TYPES = [
   ExpenseType.SAVING,
 ];
 
-// Mapping for Auto-Categorization
+// Translations for Expense Types (Key is the Enum value which is Arabic)
+export const EXPENSE_TYPE_LABELS = {
+  ar: {
+    [ExpenseType.NEED]: 'احتياج',
+    [ExpenseType.WANT]: 'رغبة',
+    [ExpenseType.SAVING]: 'ادخار واستثمار'
+  },
+  en: {
+    [ExpenseType.NEED]: 'Needs',
+    [ExpenseType.WANT]: 'Wants',
+    [ExpenseType.SAVING]: 'Savings & Investment'
+  }
+};
+
+// Mapping for Auto-Categorization (Arabic)
 export const EXPENSE_MAPPING: Record<string, ExpenseType> = {
   "قسط السيارة": ExpenseType.NEED,
   "التمويل الشخصي": ExpenseType.NEED,
@@ -40,7 +54,41 @@ export const EXPENSE_MAPPING: Record<string, ExpenseType> = {
   "الاستثمار": ExpenseType.SAVING
 };
 
+// Mapping for Auto-Categorization (English)
+export const EXPENSE_MAPPING_EN: Record<string, ExpenseType> = {
+  "Car Loan": ExpenseType.NEED,
+  "Personal Loan": ExpenseType.NEED,
+  "Mortgage / Rent": ExpenseType.NEED,
+  "Groceries": ExpenseType.NEED,
+  "School Fees": ExpenseType.NEED,
+  "Electricity Bill": ExpenseType.NEED,
+  "Water Bill": ExpenseType.NEED,
+  "Phone & Internet": ExpenseType.NEED,
+  "Transportation": ExpenseType.NEED,
+  "Fuel": ExpenseType.NEED,
+  "Medical Expenses": ExpenseType.NEED,
+  "Home Maintenance": ExpenseType.NEED,
+  
+  "Car Wash": ExpenseType.WANT,
+  "Home Services": ExpenseType.WANT,
+  "Gifts": ExpenseType.WANT,
+  "Housemaid": ExpenseType.WANT,
+  "Private Tutor": ExpenseType.WANT,
+  "Kids Shopping": ExpenseType.WANT,
+  "Restaurants & Cafes": ExpenseType.WANT,
+  "Entertainment & Shopping": ExpenseType.WANT,
+  "Charity": ExpenseType.WANT,
+  "Subscriptions (Netflix, Gym)": ExpenseType.WANT,
+  "Personal Allowance": ExpenseType.WANT,
+
+  "Emergency Fund": ExpenseType.SAVING,
+  "Holiday Savings": ExpenseType.SAVING,
+  "Kids Education Fund": ExpenseType.SAVING,
+  "Investments (Stocks, Crypto)": ExpenseType.SAVING
+};
+
 export const SUGGESTED_EXPENSES = Object.keys(EXPENSE_MAPPING);
+export const SUGGESTED_EXPENSES_EN = Object.keys(EXPENSE_MAPPING_EN);
 
 export const COLORS = {
   [ExpenseType.NEED]: '#ef4444', // Red-500

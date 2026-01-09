@@ -25,14 +25,14 @@ function AnalysisCard({ title, current, target, color, isMinimum = false, lang }
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${colors[color]} transition-all hover:shadow-sm`}>
+    <div className={`p-4 rounded-xl border ${colors[color]} transition-all hover:shadow-md duration-300`}>
       <div className="flex justify-between items-start mb-2">
         <span className="text-sm font-bold">{title}</span>
         <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm opacity-80 font-mono font-bold">{Math.round(current)}%</span>
       </div>
       <div className="w-full bg-white/50 h-2 rounded-full mb-2 overflow-hidden">
         <div 
-          className={`h-full rounded-full transition-all duration-1000 ease-out bg-current`} 
+          className={`h-full rounded-full transition-all duration-1000 ease-out bg-current shadow-sm`} 
           style={{ width: `${Math.min(current, 100)}%` }}
         ></div>
       </div>
@@ -132,11 +132,13 @@ function App() {
   const handleNextStep = () => {
       if (step === AppStep.SALARY && salary > 0) setStep(AppStep.EXPENSES);
       else if (step === AppStep.EXPENSES) setStep(AppStep.DASHBOARD);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrevStep = () => {
       if (step === AppStep.EXPENSES) setStep(AppStep.SALARY);
       else if (step === AppStep.DASHBOARD) setStep(AppStep.EXPENSES);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenAddModal = () => {
@@ -264,7 +266,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-24 relative flex flex-col" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 font-sans pb-36 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
       <StickyHeader 
         salary={salary} 
         metrics={metrics} 
@@ -285,32 +287,32 @@ function App() {
         {/* --- STEP 1: SALARY --- */}
         {step === AppStep.SALARY && (
             <div className="animate-fade-in flex flex-col items-center justify-center min-h-[50vh]">
-                 <div className="bg-white rounded-2xl shadow-xl border border-blue-100 p-8 w-full max-w-lg text-center relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
+                 <div className="bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-white/50 p-8 w-full max-w-lg text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500"></div>
                     
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">{t.salaryLabel}</h2>
+                    <h2 className="text-2xl font-black text-gray-800 mb-6">{t.salaryLabel}</h2>
                     
-                    <div className="relative mb-6">
+                    <div className="relative mb-6 group">
                         <input
                         type="number"
                         value={salary || ''}
                         onChange={(e) => setSalary(parseFloat(e.target.value))}
                         placeholder="0"
                         autoFocus
-                        className="w-full font-black text-gray-800 border-b-2 border-gray-200 focus:border-blue-600 outline-none bg-transparent transition-all placeholder-gray-200 text-5xl text-center py-4"
+                        className="w-full font-black text-gray-800 border-b-2 border-gray-100 focus:border-blue-600 outline-none bg-transparent transition-all placeholder-gray-200 text-6xl text-center py-6 group-hover:border-blue-200"
                         />
-                        <span className={`absolute text-gray-400 font-medium bottom-6 text-lg ${isRtl ? 'left-4' : 'right-4'}`}>{t.currency}</span>
+                        <span className={`absolute text-gray-400 font-bold bottom-8 text-xl pointer-events-none transition-all ${isRtl ? 'left-4' : 'right-4'}`}>{t.currency}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg text-xs text-blue-800 mb-8 justify-center">
-                        <Info size={14} />
-                        <p>{t.salaryHint}</p>
+                    <div className="flex items-center gap-2 bg-blue-50 p-4 rounded-xl text-xs text-blue-800 mb-8 justify-center border border-blue-100">
+                        <Info size={16} className="shrink-0" />
+                        <p className="font-medium">{t.salaryHint}</p>
                     </div>
 
                     <button 
                         onClick={handleNextStep}
                         disabled={salary <= 0}
-                        className={`w-full py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${salary > 0 ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                        className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 transform active:scale-95 ${salary > 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xl shadow-blue-200 hover:shadow-2xl hover:-translate-y-1' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                     >
                         <span>{t.next}</span>
                         {isRtl ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
@@ -324,22 +326,22 @@ function App() {
             <div className="animate-fade-in space-y-6">
                 
                 {/* Header Action */}
-                <div className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 gap-4">
-                    <div>
+                <div className="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-100 gap-4">
+                    <div className="text-center md:text-start">
                         <h2 className="text-xl font-bold text-gray-800">{t.step2}</h2>
-                        <p className="text-sm text-gray-500">{t.expensesTitle} ({expenses.length})</p>
+                        <p className="text-sm text-gray-500 mt-1">{t.expensesTitle} <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs font-bold text-gray-600 ml-1">{expenses.length}</span></p>
                     </div>
                     <button 
                         onClick={handleOpenAddModal}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md flex items-center gap-2 font-bold transition-all"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg shadow-blue-200 flex items-center gap-2 font-bold transition-all hover:-translate-y-0.5 active:scale-95 w-full md:w-auto justify-center"
                     >
-                        <Plus size={18} />
+                        <Plus size={20} />
                         {t.addExpense}
                     </button>
                 </div>
 
                 {/* The List */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 min-h-[300px]">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[300px] overflow-hidden">
                      <ExpenseTable 
                         expenses={expenses} 
                         salary={salary} 
@@ -350,10 +352,10 @@ function App() {
                 </div>
 
                 {/* Nav Buttons */}
-                <div className="flex justify-between mt-8">
+                <div className="flex justify-between mt-8 gap-4">
                      <button 
                         onClick={handlePrevStep}
-                        className="px-6 py-3 rounded-xl text-gray-600 hover:bg-gray-100 font-bold flex items-center gap-2 transition-colors"
+                        className="px-6 py-3 rounded-xl text-gray-500 hover:bg-gray-100 font-bold flex items-center gap-2 transition-colors"
                      >
                         {isRtl ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
                         {t.back}
@@ -361,7 +363,7 @@ function App() {
                      
                      <button 
                         onClick={handleNextStep}
-                        className="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-lg transition-all"
+                        className="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 active:scale-95"
                      >
                         <span>{t.finish}</span>
                         {isRtl ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
@@ -377,14 +379,14 @@ function App() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Charts Column */}
               <div className="lg:col-span-1 flex flex-col gap-4">
-                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
                     <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">{t.expensesTitle}</h3>
-                    <FinancialChart metrics={metrics} />
+                    <FinancialChart metrics={metrics} lang={lang} />
                  </div>
                  
-                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
                     <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">{t.target} vs {t.actual}</h3>
-                    <TargetVsActualChart salary={salary} metrics={metrics} />
+                    <TargetVsActualChart salary={salary} metrics={metrics} lang={lang} />
                  </div>
               </div>
               
@@ -392,25 +394,28 @@ function App() {
               <div className="lg:col-span-2 flex flex-col gap-6">
                  {getAnalysis()}
                  
-                 <div className="bg-indigo-900 text-white rounded-xl p-6 shadow-lg flex flex-col justify-center h-full min-h-[140px]">
-                    <h4 className="text-indigo-200 text-sm font-medium mb-1">{t.savings}</h4>
-                    <div className="text-4xl font-bold mb-2 flex items-baseline gap-2">
-                         {metrics.totalSavingsCalculated.toLocaleString()} 
-                         <span className="text-lg font-normal text-indigo-300">{t.currency}</span>
+                 <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white rounded-2xl p-8 shadow-xl shadow-indigo-100 flex flex-col justify-center h-full min-h-[160px] relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                    <div className="relative z-10">
+                        <h4 className="text-indigo-200 text-sm font-medium mb-2 uppercase tracking-wider">{t.savings}</h4>
+                        <div className="text-5xl font-black mb-3 flex items-baseline gap-2 tracking-tight">
+                            {metrics.totalSavingsCalculated.toLocaleString()} 
+                            <span className="text-xl font-normal text-indigo-300">{t.currency}</span>
+                        </div>
+                        
+                        {metrics.remainingSalary > 0 && (
+                        <div className="bg-indigo-950/30 backdrop-blur-sm rounded-lg px-4 py-2 text-sm flex items-center gap-2 w-fit mt-2 border border-white/10">
+                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span>
+                            {t.remaining}: <span className="font-mono font-bold">{metrics.remainingSalary.toLocaleString()}</span>
+                        </div>
+                        )}
                     </div>
-                    
-                    {metrics.remainingSalary > 0 && (
-                       <div className="bg-indigo-800/50 rounded px-3 py-2 text-sm flex items-center gap-2 w-fit mt-2">
-                          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                          {t.remaining}: {metrics.remainingSalary.toLocaleString()}
-                       </div>
-                    )}
                  </div>
 
                  <div className="flex gap-4">
                      <button 
                         onClick={handlePrevStep}
-                        className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 flex justify-center items-center gap-2"
+                        className="flex-1 bg-white border-2 border-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 flex justify-center items-center gap-2 transition-all hover:border-gray-200"
                      >
                         <Edit2 size={16} />
                         {t.edit} {t.step2}
@@ -421,9 +426,9 @@ function App() {
 
             {/* Expenses Table (Read Only view or quick edit) */}
             {expenses.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 animate-fade-in mt-6">
-                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-                   <h3 className="font-bold text-gray-800">{t.expensesTitle}</h3>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-fade-in mt-6 overflow-hidden">
+                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                   <h3 className="font-bold text-gray-800 text-sm">{t.expensesTitle}</h3>
                    <button onClick={() => setStep(AppStep.EXPENSES)} className="text-blue-600 text-xs font-bold hover:underline">
                       {t.edit}
                    </button>
@@ -445,7 +450,7 @@ function App() {
       {/* Modal */}
       {isModalOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in"
           onClick={(e) => {
              if (e.target === e.currentTarget) handleCloseModal();
           }}
@@ -465,12 +470,12 @@ function App() {
         </div>
       )}
 
-      {/* Persistent Footer */}
-      <footer className="fixed bottom-0 w-full bg-white border-t border-gray-200 py-2 px-4 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40 flex justify-between items-center">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+      {/* Persistent Footer - Centered always */}
+      <footer className="fixed bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 py-4 px-4 shadow-[0_-5px_25px_rgba(0,0,0,0.03)] z-40 flex flex-col sm:flex-row justify-center items-center gap-3 transition-all">
+        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
            <span>{t.developedBy}</span>
-           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer">
-             <img src="./ashareef_logo.png" alt="Logo" className="h-8 object-contain opacity-80 hover:opacity-100" />
+           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+             <img src="./ashareef_logo.png" alt="Logo" className="h-6 object-contain" />
            </a>
         </div>
 
@@ -479,10 +484,10 @@ function App() {
              <button 
              onClick={exportPDF}
              disabled={isExporting}
-             className={`bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-transform hover:scale-105 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+             className={`bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-full shadow-lg flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
            >
-             {isExporting ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={16} />}
-             <span className="font-bold text-xs md:text-sm">{t.exportPDF}</span>
+             {isExporting ? <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={14} />}
+             <span className="font-bold text-xs">{t.exportPDF}</span>
            </button>
         )}
       </footer>
