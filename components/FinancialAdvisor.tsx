@@ -43,9 +43,9 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
 
   useEffect(() => {
     const initChat = async () => {
-      // Assuming API_KEY is available in the environment as per strict instructions
-      // If not, this part will fail silently or log error, but we cannot create UI for it.
-      if (!process.env.API_KEY) {
+      // Check for API Key safely
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) {
          setMessages([{
              id: 'error',
              sender: 'ai',
@@ -57,7 +57,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
       }
 
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         
         const systemInstruction = `
           You are 'Qawam Assistant', a financial advisor.
@@ -97,7 +97,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
         `;
 
         const chat = ai.chats.create({
-          model: 'gemini-2.5-flash-preview',
+          model: 'gemini-3-flash-preview',
           config: {
             systemInstruction: systemInstruction,
             temperature: 0.7,
@@ -115,11 +115,16 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
 
       } catch (error) {
         console.error("Failed to init chat", error);
+        setMessages([{
+             id: 'init-error',
+             sender: 'ai',
+             text: lang === 'ar' ? "فشل تهيئة المحادثة." : "Failed to initialize chat."
+        }]);
       }
     };
 
     initChat();
-  }, [salary, lang]);
+  }, [salary, lang, t.currency, t.chatWelcome]);
 
   const handleSend = async () => {
     if (!input.trim() || !chatSessionRef.current) return;
@@ -150,9 +155,9 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
             data.expenses.forEach((exp: any) => {
               // Ensure type matches enum
               let type: ExpenseType = ExpenseType.NEED;
-              if (exp.type === 'رغبة' || exp.type === 'Wants') type = ExpenseType.WANT;
-              if (exp.type === 'ادخار واستثمار' || exp.type === 'Savings') type = ExpenseType.SAVING;
-              if (exp.type === 'احتياج' || exp.type === 'Needs') type = ExpenseType.NEED;
+              if (exp.type === 'رغبة' || exp.type === 'Wants' || exp.type === 'Want') type = ExpenseType.WANT;
+              if (exp.type === 'ادخار واستثمار' || exp.type === 'Savings' || exp.type === 'Saving') type = ExpenseType.SAVING;
+              if (exp.type === 'احتياج' || exp.type === 'Needs' || exp.type === 'Need') type = ExpenseType.NEED;
 
               onAddExpense({
                 name: exp.name,
@@ -172,8 +177,16 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
 
       setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'ai', text: displayText }]);
 
-    } catch (error) {
-      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'ai', text: "Sorry, I had trouble connecting. Please try again." }]);
+    } catch (error: any) {
+      console.error("Chat Error:", error);
+      
+      let errorMsg = lang === 'ar' ? "عذراً، حدث خطأ في الاتصال." : "Sorry, connection error.";
+      // Append detailed error for debugging
+      if (error.message) {
+         errorMsg += ` (${error.message})`;
+      }
+      
+      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'ai', text: errorMsg }]);
     } finally {
       setIsTyping(false);
     }
