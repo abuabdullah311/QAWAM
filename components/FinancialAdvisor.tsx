@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
-import { Send, Bot, User, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Send, Bot, User, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Expense, ExpenseType, Language, BudgetRule } from '../types';
 import { TRANSLATIONS } from '../constants';
 
@@ -43,21 +43,21 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
 
   useEffect(() => {
     const initChat = async () => {
-      // Check for API Key safely
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) {
+      // Direct check of process.env.API_KEY to ensure bundlers replace it correctly
+      if (!process.env.API_KEY) {
          setMessages([{
              id: 'error',
              sender: 'ai',
              text: lang === 'ar' 
-               ? "عذراً، مفتاح API غير متوفر. يرجى المتابعة للإدخال اليدوي." 
-               : "Sorry, API Key is missing. Please proceed to manual entry."
+               ? "عذراً، مفتاح API غير متوفر. يرجى التأكد من إعدادات البيئة." 
+               : "Sorry, API Key is missing. Please check environment settings."
          }]);
          return;
       }
 
       try {
-        const ai = new GoogleGenAI({ apiKey: apiKey });
+        // Initialize with direct process.env access
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
         const systemInstruction = `
           You are 'Qawam Assistant', a financial advisor.
@@ -118,7 +118,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
         setMessages([{
              id: 'init-error',
              sender: 'ai',
-             text: lang === 'ar' ? "فشل تهيئة المحادثة." : "Failed to initialize chat."
+             text: lang === 'ar' ? "فشل تهيئة المحادثة. يرجى المحاولة لاحقاً." : "Failed to initialize chat."
         }]);
       }
     };
@@ -181,9 +181,28 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
       console.error("Chat Error:", error);
       
       let errorMsg = lang === 'ar' ? "عذراً، حدث خطأ في الاتصال." : "Sorry, connection error.";
-      // Append detailed error for debugging
-      if (error.message) {
-         errorMsg += ` (${error.message})`;
+      
+      // Try to extract readable error message from JSON error string
+      let detailedMsg = error.message || "";
+      if (typeof detailedMsg === 'string' && detailedMsg.includes('{')) {
+          try {
+             // Attempt to extract the JSON part if it's mixed with text or is raw JSON
+             const jsonPart = detailedMsg.substring(detailedMsg.indexOf('{'));
+             const errObj = JSON.parse(jsonPart);
+             if (errObj.error && errObj.error.message) {
+                 detailedMsg = errObj.error.message;
+             }
+          } catch (e) {
+             // ignore parse error
+          }
+      }
+
+      if (detailedMsg.includes("API key not valid") || detailedMsg.includes("API_KEY_INVALID")) {
+          errorMsg = lang === 'ar' 
+             ? "عذراً، مفتاح API المستخدم غير صالح. يرجى التحقق من المفتاح." 
+             : "Invalid API Key provided.";
+      } else {
+          errorMsg += ` (${detailedMsg.substring(0, 50)}...)`;
       }
       
       setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'ai', text: errorMsg }]);
@@ -226,13 +245,14 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div 
-              className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+              className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex items-start gap-2 ${
                 msg.sender === 'user' 
                   ? 'bg-blue-600 text-white rounded-br-none' 
-                  : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+                  : (msg.id.includes('error') ? 'bg-red-50 text-red-800 border border-red-100' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none')
               }`}
             >
-              {msg.text}
+               {msg.id.includes('error') && <AlertTriangle size={16} className="mt-0.5 shrink-0" />}
+               <span>{msg.text}</span>
             </div>
           </div>
         ))}
