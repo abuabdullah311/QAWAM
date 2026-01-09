@@ -5,7 +5,8 @@ import { TargetVsActualChart } from './components/TargetVsActualChart';
 import { ExpenseTable } from './components/ExpenseTable';
 import { AddExpenseForm } from './components/AddExpenseForm';
 import { PrintableReport } from './components/PrintableReport';
-import { Expense, ExpenseType, DashboardMetrics, AppStep, Language } from './types';
+import { FinancialAdvisor } from './components/FinancialAdvisor';
+import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule } from './types';
 import { TRANSLATIONS } from './constants';
 import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send } from 'lucide-react';
 import html2canvas from 'html2canvas';
@@ -60,6 +61,7 @@ function App() {
   const [step, setStep] = useState<AppStep>(AppStep.SALARY);
   const [salary, setSalary] = useState<number>(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budgetRule, setBudgetRule] = useState<BudgetRule>({ needs: 50, wants: 30, savings: 20 });
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,6 +75,7 @@ function App() {
     const savedExpenses = localStorage.getItem('qawam_expenses');
     const savedSalary = localStorage.getItem('qawam_salary');
     const savedVisitor = localStorage.getItem('qawam_visitors');
+    const savedRule = localStorage.getItem('qawam_rule');
     
     // Simple mock visitor logic
     let count = 12050;
@@ -83,6 +86,10 @@ function App() {
        localStorage.setItem('qawam_visitors', count.toString());
     }
     setVisitorCount(count);
+
+    if (savedRule) {
+      setBudgetRule(JSON.parse(savedRule));
+    }
 
     if (savedSalary) {
       const s = parseFloat(savedSalary);
@@ -106,7 +113,8 @@ function App() {
   useEffect(() => {
     localStorage.setItem('qawam_expenses', JSON.stringify(expenses));
     localStorage.setItem('qawam_salary', salary.toString());
-  }, [expenses, salary]);
+    localStorage.setItem('qawam_rule', JSON.stringify(budgetRule));
+  }, [expenses, salary, budgetRule]);
 
   // Calculations
   const metrics: DashboardMetrics = React.useMemo(() => {
@@ -130,13 +138,15 @@ function App() {
 
   // Handlers
   const handleNextStep = () => {
-      if (step === AppStep.SALARY && salary > 0) setStep(AppStep.EXPENSES);
+      if (step === AppStep.SALARY && salary > 0) setStep(AppStep.ADVISOR);
+      else if (step === AppStep.ADVISOR) setStep(AppStep.EXPENSES);
       else if (step === AppStep.EXPENSES) setStep(AppStep.DASHBOARD);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrevStep = () => {
-      if (step === AppStep.EXPENSES) setStep(AppStep.SALARY);
+      if (step === AppStep.ADVISOR) setStep(AppStep.SALARY);
+      else if (step === AppStep.EXPENSES) setStep(AppStep.ADVISOR);
       else if (step === AppStep.DASHBOARD) setStep(AppStep.EXPENSES);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -157,7 +167,7 @@ function App() {
   };
 
   const handleAddExpense = (newExpenseData: Omit<Expense, 'id'>) => {
-    const newExpense = { ...newExpenseData, id: Date.now().toString() };
+    const newExpense = { ...newExpenseData, id: Date.now().toString() + Math.random().toString() };
     setExpenses(prev => [newExpense, ...prev]);
     handleCloseModal();
     return true;
@@ -177,8 +187,10 @@ function App() {
     if (window.confirm(lang === 'ar' ? 'هل أنت متأكد من حذف البيانات؟' : 'Are you sure you want to reset data?')) {
       localStorage.removeItem('qawam_expenses');
       localStorage.removeItem('qawam_salary');
+      localStorage.removeItem('qawam_rule');
       setSalary(0);
       setExpenses([]);
+      setBudgetRule({ needs: 50, wants: 30, savings: 20 });
       setEditingExpense(null);
       setStep(AppStep.SALARY);
       window.scrollTo(0, 0);
@@ -239,9 +251,9 @@ function App() {
     const savePct = (metrics.totalSavingsCalculated / salary) * 100;
 
     const isBalanced = 
-      Math.abs(needPct - 50) <= 5 && 
-      Math.abs(wantPct - 30) <= 5 && 
-      savePct >= 15;
+      Math.abs(needPct - budgetRule.needs) <= 5 && 
+      Math.abs(wantPct - budgetRule.wants) <= 5 && 
+      savePct >= (budgetRule.savings - 5);
 
     return (
       <div className="mb-6">
@@ -257,9 +269,9 @@ function App() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <AnalysisCard title={`${t.needs} (${t.target} 50%)`} current={needPct} target={50} color="red" lang={lang} />
-          <AnalysisCard title={`${t.wants} (${t.target} 30%)`} current={wantPct} target={30} color="amber" lang={lang} />
-          <AnalysisCard title={`${t.savings} (${t.target} 20%)`} current={savePct} target={20} color="emerald" isMinimum lang={lang} />
+          <AnalysisCard title={`${t.needs} (${t.target} ${budgetRule.needs}%)`} current={needPct} target={budgetRule.needs} color="red" lang={lang} />
+          <AnalysisCard title={`${t.wants} (${t.target} ${budgetRule.wants}%)`} current={wantPct} target={budgetRule.wants} color="amber" lang={lang} />
+          <AnalysisCard title={`${t.savings} (${t.target} ${budgetRule.savings}%)`} current={savePct} target={budgetRule.savings} color="emerald" isMinimum lang={lang} />
         </div>
       </div>
     );
@@ -279,7 +291,13 @@ function App() {
 
       {/* Hidden Report for PDF */}
       <div style={{ position: 'fixed', left: '-10000px', top: 0, zIndex: -5, overflow: 'hidden' }}>
-        <PrintableReport salary={salary} metrics={metrics} expenses={expenses} lang={lang} />
+        <PrintableReport 
+            salary={salary} 
+            metrics={metrics} 
+            expenses={expenses} 
+            lang={lang} 
+            budgetRule={budgetRule}
+        />
       </div>
 
       <main className="max-w-4xl mx-auto px-4 flex-grow w-full">
@@ -321,7 +339,20 @@ function App() {
             </div>
         )}
 
-        {/* --- STEP 2: EXPENSES --- */}
+        {/* --- STEP 2: AI ADVISOR (NEW) --- */}
+        {step === AppStep.ADVISOR && (
+            <div className="animate-fade-in w-full max-w-2xl mx-auto">
+                <FinancialAdvisor 
+                    salary={salary}
+                    onAddExpense={handleAddExpense}
+                    onUpdateRule={setBudgetRule}
+                    onFinish={() => setStep(AppStep.EXPENSES)}
+                    lang={lang}
+                />
+            </div>
+        )}
+
+        {/* --- STEP 3: EXPENSES LIST --- */}
         {step === AppStep.EXPENSES && (
             <div className="animate-fade-in space-y-6">
                 
@@ -372,7 +403,7 @@ function App() {
             </div>
         )}
 
-        {/* --- STEP 3: DASHBOARD --- */}
+        {/* --- STEP 4: DASHBOARD --- */}
         {step === AppStep.DASHBOARD && (
           <div className="animate-fade-in space-y-6">
             
@@ -386,7 +417,12 @@ function App() {
                  
                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
                     <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">{t.target} vs {t.actual}</h3>
-                    <TargetVsActualChart salary={salary} metrics={metrics} lang={lang} />
+                    <TargetVsActualChart 
+                        salary={salary} 
+                        metrics={metrics} 
+                        lang={lang} 
+                        budgetRule={budgetRule}
+                    />
                  </div>
               </div>
               

@@ -123,6 +123,7 @@ export const TRANSLATIONS = {
   ar: {
     appTitle: "قَوَام",
     step1: "الراتب",
+    advisorStep: "المساعد الذكي",
     step2: "المصاريف",
     step3: "النتائج",
     salaryLabel: "صافي الراتب الشهري",
@@ -132,6 +133,7 @@ export const TRANSLATIONS = {
     next: "التالي",
     back: "السابق",
     finish: "عرض النتائج",
+    skipToExpenses: "تخطي للإدخال اليدوي",
     addExpense: "إضافة مصروف جديد",
     expensesTitle: "قائمة المصروفات",
     noExpenses: "لم يتم إضافة مصروفات بعد.",
@@ -163,11 +165,14 @@ export const TRANSLATIONS = {
     belowTarget: "أقل من الهدف بـ",
     aboveTarget: "أعلى من الهدف بـ",
     idealRange: "ضمن النطاق المثالي",
-    developedBy: "تم التطوير بواسطة"
+    developedBy: "تم التطوير بواسطة",
+    chatPlaceholder: "اكتب إجابتك هنا...",
+    chatWelcome: "مرحباً! أنا مساعدك المالي. هدفي مساعدتك في تحديد خطة الميزانية الأنسب لك. للبدء، هل يمكنك إخباري عن حالتك الاجتماعية؟ (أعزب، متزوج، تعول أسرة؟)"
   },
   en: {
     appTitle: "QAWAM",
     step1: "Salary",
+    advisorStep: "AI Advisor",
     step2: "Expenses",
     step3: "Dashboard",
     salaryLabel: "Net Monthly Salary",
@@ -177,6 +182,7 @@ export const TRANSLATIONS = {
     next: "Next",
     back: "Back",
     finish: "View Results",
+    skipToExpenses: "Skip to Manual Entry",
     addExpense: "Add New Expense",
     expensesTitle: "Expenses List",
     noExpenses: "No expenses added yet.",
@@ -208,6 +214,8 @@ export const TRANSLATIONS = {
     belowTarget: "Below target by",
     aboveTarget: "Above target by",
     idealRange: "Within ideal range",
-    developedBy: "Developed by"
+    developedBy: "Developed by",
+    chatPlaceholder: "Type your answer here...",
+    chatWelcome: "Hello! I am your financial assistant. I'll help you set the best budget plan. To start, what is your social status? (Single, Married, Supporting a family?)"
   }
 };

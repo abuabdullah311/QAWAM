@@ -6,8 +6,9 @@ export enum ExpenseType {
 
 export enum AppStep {
   SALARY = 1,
-  EXPENSES = 2,
-  DASHBOARD = 3
+  ADVISOR = 2,
+  EXPENSES = 3,
+  DASHBOARD = 4
 }
 
 export type Language = 'ar' | 'en';
@@ -18,6 +19,12 @@ export interface Expense {
   amount: number;
   type: ExpenseType;
   notes?: string;
+}
+
+export interface BudgetRule {
+  needs: number;
+  wants: number;
+  savings: number;
 }
 
 export interface Suggestion {
