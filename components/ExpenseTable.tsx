@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trash2, Edit2 } from 'lucide-react';
 import { Expense, ExpenseType, Language } from '../types';
-import { TRANSLATIONS } from '../constants';
+import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from '../constants';
 
 interface ExpenseTableProps {
   expenses: Expense[];
@@ -24,10 +24,11 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
   };
 
   const getTypeBadge = (type: ExpenseType) => {
+    const label = EXPENSE_TYPE_LABELS[lang][type];
     switch (type) {
-      case ExpenseType.NEED: return <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 font-medium">{type}</span>;
-      case ExpenseType.WANT: return <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800 font-medium">{type}</span>;
-      case ExpenseType.SAVING: return <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-800 font-medium">{type}</span>;
+      case ExpenseType.NEED: return <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 font-medium">{label}</span>;
+      case ExpenseType.WANT: return <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800 font-medium">{label}</span>;
+      case ExpenseType.SAVING: return <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-800 font-medium">{label}</span>;
     }
   };
 

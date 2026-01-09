@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardMetrics, Expense, ExpenseType, Language } from '../types';
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { COLORS, TRANSLATIONS } from '../constants';
+import { COLORS, TRANSLATIONS, EXPENSE_TYPE_LABELS } from '../constants';
 
 interface PrintableReportProps {
   salary: number;
@@ -16,17 +16,17 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
 
   // Pie Chart Data
   const pieData = [
-    { name: ExpenseType.NEED, value: metrics.totalNeeds, color: COLORS[ExpenseType.NEED] },
-    { name: ExpenseType.WANT, value: metrics.totalWants, color: COLORS[ExpenseType.WANT] },
-    { name: ExpenseType.SAVING, value: metrics.totalSavingsCalculated, color: COLORS[ExpenseType.SAVING] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED], value: metrics.totalNeeds, color: COLORS[ExpenseType.NEED] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT], value: metrics.totalWants, color: COLORS[ExpenseType.WANT] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING], value: metrics.totalSavingsCalculated, color: COLORS[ExpenseType.SAVING] },
   ].filter(item => item.value > 0);
 
   // Bar Chart Data
   const getPercent = (val: number) => salary > 0 ? parseFloat(((val / salary) * 100).toFixed(1)) : 0;
   const barData = [
-    { name: ExpenseType.NEED, actual: getPercent(metrics.totalNeeds), target: 50, color: COLORS[ExpenseType.NEED] },
-    { name: ExpenseType.WANT, actual: getPercent(metrics.totalWants), target: 30, color: COLORS[ExpenseType.WANT] },
-    { name: ExpenseType.SAVING, actual: getPercent(metrics.totalSavingsCalculated), target: 20, color: COLORS[ExpenseType.SAVING] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED], actual: getPercent(metrics.totalNeeds), target: 50, color: COLORS[ExpenseType.NEED] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT], actual: getPercent(metrics.totalWants), target: 30, color: COLORS[ExpenseType.WANT] },
+    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING], actual: getPercent(metrics.totalSavingsCalculated), target: 20, color: COLORS[ExpenseType.SAVING] },
   ];
 
   const today = new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
@@ -57,7 +57,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
              </span>
           </div>
           <div className="w-32 flex justify-end">
-             <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded-full">v1.4</span>
+             <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded-full">v1.5</span>
           </div>
         </div>
         <div className="flex flex-col items-center gap-2">
@@ -102,7 +102,7 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
       <div className="mb-8 bg-gray-50 border border-gray-100 rounded-xl p-6">
         <div className="flex justify-between items-start gap-4">
           
-          {/* Pie Chart - Fixed Legend Issue */}
+          {/* Pie Chart */}
           <div style={{ width: 330, height: 220, direction: 'ltr' }} className="flex flex-col items-center">
             <PieChart width={330} height={200}>
               <Pie
@@ -119,7 +119,6 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
                   <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={1} stroke="#fff" />
                 ))}
               </Pie>
-              {/* Legend handles values to avoid text clipping on PDF */}
               <Legend 
                 verticalAlign="middle" 
                 align="right"
@@ -183,7 +182,9 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({ salary, metric
             {expenses.map((expense, idx) => (
               <tr key={expense.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="p-2 border border-gray-200 font-bold text-gray-800">{expense.name}</td>
-                <td className="p-2 border border-gray-200 text-gray-600 text-xs">{expense.type}</td>
+                <td className="p-2 border border-gray-200 text-gray-600 text-xs">
+                    {EXPENSE_TYPE_LABELS[lang][expense.type]}
+                </td>
                 <td className="p-2 border border-gray-200 font-mono text-gray-700">{expense.amount.toLocaleString()}</td>
                 <td className="p-2 border border-gray-200 text-xs text-gray-500">
                   {salary > 0 ? ((expense.amount / salary) * 100).toFixed(1) : 0}%

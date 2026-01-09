@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Expense, ExpenseType, Language } from '../types';
-import { EXPENSE_TYPES, SUGGESTED_EXPENSES, EXPENSE_MAPPING, TRANSLATIONS } from '../constants';
+import { EXPENSE_TYPES, SUGGESTED_EXPENSES, SUGGESTED_EXPENSES_EN, EXPENSE_MAPPING, EXPENSE_MAPPING_EN, TRANSLATIONS, EXPENSE_TYPE_LABELS } from '../constants';
 import { PlusCircle, Save, X, AlertTriangle } from 'lucide-react';
 
 interface AddExpenseFormProps {
@@ -31,6 +31,9 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [advice, setAdvice] = useState<string | null>(null);
+  
+  // Determine which suggestions to show
+  const currentSuggestions = lang === 'ar' ? SUGGESTED_EXPENSES : SUGGESTED_EXPENSES_EN;
 
   useEffect(() => {
     if (editingExpense) {
@@ -44,10 +47,17 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   }, [editingExpense]);
 
   useEffect(() => {
-    if (name && EXPENSE_MAPPING[name]) {
-       setType(EXPENSE_MAPPING[name]);
+    if (name) {
+       // Check Arabic mapping
+       if (lang === 'ar' && EXPENSE_MAPPING[name]) {
+          setType(EXPENSE_MAPPING[name]);
+       }
+       // Check English mapping
+       if (lang === 'en' && EXPENSE_MAPPING_EN[name]) {
+          setType(EXPENSE_MAPPING_EN[name]);
+       }
     }
-  }, [name]);
+  }, [name, lang]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,18 +159,16 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseName}</label>
               
-              {lang === 'ar' && (
-                  <select 
-                    onChange={handleSuggestionSelect}
-                    className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none cursor-pointer"
-                    defaultValue=""
-                  >
-                    <option value="" disabled>↓ اختر من القائمة المقترحة</option>
-                    {SUGGESTED_EXPENSES.map((s, i) => (
-                      <option key={i} value={s}>{s}</option>
-                    ))}
-                  </select>
-              )}
+              <select 
+                onChange={handleSuggestionSelect}
+                className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none cursor-pointer"
+                defaultValue=""
+              >
+                <option value="" disabled>{lang === 'ar' ? "↓ اختر من القائمة المقترحة" : "↓ Select suggested expense"}</option>
+                {currentSuggestions.map((s, i) => (
+                  <option key={i} value={s}>{s}</option>
+                ))}
+              </select>
 
               <input
                 type="text"
@@ -180,7 +188,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${lang==='ar' ? 'mt-[29px]' : ''}`}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${lang==='ar' ? 'mt-[29px]' : 'md:mt-[29px]'}`}
               placeholder="0.00"
               min="0"
               required
@@ -195,7 +203,9 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
               className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white md:mt-[29px] ${getTypeColorClass(type)}`}
             >
               {EXPENSE_TYPES.map(t => (
-                <option key={t} value={t} className={getTypeColorClass(t)}>{t}</option>
+                <option key={t} value={t} className={getTypeColorClass(t)}>
+                    {EXPENSE_TYPE_LABELS[lang][t]}
+                </option>
               ))}
             </select>
           </div>
