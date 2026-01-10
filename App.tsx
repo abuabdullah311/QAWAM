@@ -6,9 +6,10 @@ import { ExpenseTable } from './components/ExpenseTable';
 import { AddExpenseForm } from './components/AddExpenseForm';
 import { PrintableReport } from './components/PrintableReport';
 import { FinancialAdvisor } from './components/FinancialAdvisor';
+import { ExpenseWizard } from './components/ExpenseWizard';
 import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule } from './types';
-import { TRANSLATIONS } from './constants';
-import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send } from 'lucide-react';
+import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from './constants';
+import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -56,6 +57,21 @@ function AnalysisCard({ title, current, target, color, isMinimum = false, lang }
   );
 }
 
+interface BlockingErrorState {
+  type: 'total';
+  current: number;
+  limit: number;
+}
+
+interface WarningState {
+  type: 'needs' | 'wants' | 'savings';
+  current: number;
+  limit: number;
+  rulePct: number;
+  excessAmount: number;
+  suggestions: { name: string; amount: number; reduceBy: number }[];
+}
+
 function App() {
   const [lang, setLang] = useState<Language>('ar');
   const [step, setStep] = useState<AppStep>(AppStep.SALARY);
@@ -65,6 +81,13 @@ function App() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // State for Blocking Errors (Total > Salary)
+  const [blockingError, setBlockingError] = useState<BlockingErrorState | null>(null);
+  
+  // State for Warnings (Category > Limit) - Non blocking
+  const [warningState, setWarningState] = useState<WarningState | null>(null);
+  
   const [visitorCount, setVisitorCount] = useState<number>(12050);
 
   const t = TRANSLATIONS[lang];
@@ -95,11 +118,11 @@ function App() {
       const s = parseFloat(savedSalary);
       setSalary(s);
       if (s > 0) {
-          // If expenses exist, go to dashboard, else salary/expenses
+          // If expenses exist, go to dashboard
           if(savedExpenses && JSON.parse(savedExpenses).length > 0) {
               setStep(AppStep.DASHBOARD);
           } else {
-              setStep(AppStep.EXPENSES);
+              setStep(AppStep.WIZARD);
           }
       }
     }
@@ -138,16 +161,95 @@ function App() {
 
   // Handlers
   const handleNextStep = () => {
-      if (step === AppStep.SALARY && salary > 0) setStep(AppStep.ADVISOR);
+      if (step === AppStep.SALARY && salary > 0) {
+          if (expenses.length > 0) {
+              setStep(AppStep.EXPENSES);
+          } else {
+              setStep(AppStep.WIZARD);
+          }
+      }
+      else if (step === AppStep.WIZARD) setStep(AppStep.ADVISOR);
       else if (step === AppStep.ADVISOR) setStep(AppStep.EXPENSES);
-      else if (step === AppStep.EXPENSES) setStep(AppStep.DASHBOARD);
+      else if (step === AppStep.EXPENSES) {
+          
+          // 1. STRICT BLOCKING: Total Expenses > Salary
+          // This must prevent progress because it's mathematically impossible
+          if (Math.round(metrics.totalExpenses) > salary) {
+              setBlockingError({ 
+                  type: 'total', 
+                  current: metrics.totalExpenses, 
+                  limit: salary 
+              });
+              return;
+          }
+
+          // 2. WARNINGS (Non-blocking): Check limits
+          // We check Wants first as requested, then others
+          
+          const wantsLimit = (budgetRule.wants / 100) * salary;
+          if (Math.round(metrics.totalWants) > Math.round(wantsLimit)) {
+               triggerWarning('wants', metrics.totalWants, wantsLimit, budgetRule.wants);
+               return;
+          }
+
+          const needsLimit = (budgetRule.needs / 100) * salary;
+          if (Math.round(metrics.totalNeeds) > Math.round(needsLimit)) {
+               triggerWarning('needs', metrics.totalNeeds, needsLimit, budgetRule.needs);
+               return;
+          }
+
+          // If no blocking errors and no warnings (or warnings ignored), proceed
+          setStep(AppStep.DASHBOARD);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const triggerWarning = (type: 'needs'|'wants'|'savings', current: number, limit: number, rulePct: number) => {
+      const excess = current - limit;
+      const expenseType = type === 'needs' ? ExpenseType.NEED : (type === 'wants' ? ExpenseType.WANT : ExpenseType.SAVING);
+      
+      // Find largest expenses in this category to suggest reduction
+      const categoryExpenses = expenses
+          .filter(e => e.type === expenseType)
+          .sort((a, b) => b.amount - a.amount);
+
+      const suggestions = categoryExpenses.slice(0, 3).map(e => ({
+          name: e.name,
+          amount: e.amount,
+          reduceBy: Math.min(e.amount, excess) // Suggest reducing by excess, capped at item amount
+      }));
+
+      setWarningState({
+          type,
+          current,
+          limit,
+          rulePct,
+          excessAmount: excess,
+          suggestions
+      });
+  };
+
+  const handleIgnoreWarning = () => {
+      setWarningState(null);
+      setStep(AppStep.DASHBOARD);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrevStep = () => {
-      if (step === AppStep.ADVISOR) setStep(AppStep.SALARY);
+      if (step === AppStep.WIZARD) setStep(AppStep.SALARY);
+      else if (step === AppStep.ADVISOR) setStep(AppStep.WIZARD);
       else if (step === AppStep.EXPENSES) setStep(AppStep.ADVISOR);
       else if (step === AppStep.DASHBOARD) setStep(AppStep.EXPENSES);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  const handleWizardComplete = (newExpenses: Omit<Expense, 'id'>[]) => {
+      const formatted = newExpenses.map(e => ({
+          ...e,
+          id: Date.now().toString() + Math.random().toString()
+      }));
+      setExpenses(formatted);
+      setStep(AppStep.ADVISOR);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -202,39 +304,28 @@ function App() {
     try {
       const input = document.getElementById('printable-report');
       if (!input) throw new Error('Report not found');
-      
-      // Temporarily show report to capture
       input.style.display = 'flex';
-      
       const canvas = await html2canvas(input, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff'
       });
-      
-      // Hide again (actually it's fixed offscreen in JSX)
-
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF(isRtl ? 'p' : 'p', 'mm', 'a4'); // No RTL config needed for images
-      
+      const pdf = new jsPDF(isRtl ? 'p' : 'p', 'mm', 'a4'); 
       const imgWidth = 210; 
       const pageHeight = 297; 
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
       let heightLeft = imgHeight;
       let position = 0;
-
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-
       pdf.save(`QAWAM-Report-${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (err) {
       console.error(err);
@@ -275,6 +366,108 @@ function App() {
         </div>
       </div>
     );
+  };
+
+  const renderBlockingModalContent = () => {
+      if (!blockingError) return null;
+      // This is only for Total > Salary
+      const title = lang === 'ar' ? 'تجاوز الراتب' : 'Salary Exceeded';
+      const message = lang === 'ar' 
+        ? `إجمالي المصروفات (${blockingError.current.toLocaleString()}) يتجاوز صافي الراتب (${blockingError.limit.toLocaleString()}).`
+        : `Total expenses (${blockingError.current.toLocaleString()}) exceed net salary (${blockingError.limit.toLocaleString()}).`;
+
+      return (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
+             <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center border-t-4 border-red-500">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                   <Ban size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+                <p className="text-gray-600 mb-6 leading-relaxed text-sm">{message}</p>
+                <button
+                    onClick={() => setBlockingError(null)}
+                    className="w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition-colors shadow-lg"
+                >
+                    {lang === 'ar' ? 'مراجعة المصروفات' : 'Review Expenses'}
+                </button>
+             </div>
+          </div>
+      );
+  };
+
+  const renderWarningModalContent = () => {
+      if (!warningState) return null;
+      
+      const catName = warningState.type === 'needs' ? t.needs 
+                     : warningState.type === 'wants' ? t.wants 
+                     : t.savings;
+      
+      const title = lang === 'ar' ? `تنبيه: ارتفاع ${catName}` : `Warning: High ${catName}`;
+      
+      return (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
+             <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform scale-100 transition-all">
+                <div className="flex justify-between items-start mb-4">
+                     <div className="flex items-center gap-3">
+                         <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div className="text-start">
+                             <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+                             <p className="text-xs text-gray-500">{lang === 'ar' ? 'لقد تجاوزت النسبة المقترحة' : 'You exceeded the suggested ratio'}</p>
+                        </div>
+                     </div>
+                     <button onClick={() => setWarningState(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                </div>
+                
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 text-sm text-gray-700 mb-6 leading-relaxed text-start">
+                    {lang === 'ar' ? (
+                        <>
+                           مجموع مصاريف "{catName}" هو <span className="font-bold">{warningState.current.toLocaleString()}</span>. 
+                           للوصول للنسبة المثالية ({warningState.rulePct}%)، يفضل تقليل المبلغ بمقدار <span className="font-bold text-red-600">{Math.round(warningState.excessAmount).toLocaleString()}</span>.
+                        </>
+                    ) : (
+                        <>
+                           Total "{catName}" expenses are <span className="font-bold">{warningState.current.toLocaleString()}</span>.
+                           To reach the ideal ratio ({warningState.rulePct}%), try reducing by <span className="font-bold text-red-600">{Math.round(warningState.excessAmount).toLocaleString()}</span>.
+                        </>
+                    )}
+                </div>
+
+                {warningState.suggestions.length > 0 && (
+                    <div className="mb-6">
+                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 text-start">{lang === 'ar' ? 'مقترحات للتخفيض:' : 'Suggestions to reduce:'}</h4>
+                        <div className="space-y-2">
+                            {warningState.suggestions.map((s, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <span className="font-bold text-gray-700 text-sm">{s.name}</span>
+                                    <div className="text-xs text-gray-500">
+                                        {lang === 'ar' ? 'قلل بمقدار' : 'Reduce by'} <span className="font-bold text-emerald-600">{Math.round(s.reduceBy).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setWarningState(null)}
+                        className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                    >
+                        {lang === 'ar' ? 'مراجعة وتعديل' : 'Review & Edit'}
+                    </button>
+                    <button
+                        onClick={handleIgnoreWarning}
+                        className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors shadow-md flex items-center justify-center gap-2"
+                    >
+                        <span>{lang === 'ar' ? 'تجاهل وعرض النتائج' : 'Ignore & Show Results'}</span>
+                        {isRtl ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+                    </button>
+                </div>
+             </div>
+          </div>
+      );
   };
 
   return (
@@ -339,12 +532,21 @@ function App() {
             </div>
         )}
 
-        {/* --- STEP 2: AI ADVISOR (NEW) --- */}
+        {/* --- STEP 2: EXPENSE WIZARD (NEW) --- */}
+        {step === AppStep.WIZARD && (
+            <ExpenseWizard 
+               salary={salary}
+               lang={lang}
+               onComplete={handleWizardComplete}
+            />
+        )}
+
+        {/* --- STEP 3: AI ADVISOR (ANALYSIS ONLY) --- */}
         {step === AppStep.ADVISOR && (
             <div className="animate-fade-in w-full max-w-2xl mx-auto">
                 <FinancialAdvisor 
                     salary={salary}
-                    onAddExpense={handleAddExpense}
+                    expenses={expenses}
                     onUpdateRule={setBudgetRule}
                     onFinish={() => setStep(AppStep.EXPENSES)}
                     lang={lang}
@@ -352,15 +554,29 @@ function App() {
             </div>
         )}
 
-        {/* --- STEP 3: EXPENSES LIST --- */}
+        {/* --- STEP 4: EXPENSES LIST --- */}
         {step === AppStep.EXPENSES && (
             <div className="animate-fade-in space-y-6">
                 
                 {/* Header Action */}
                 <div className="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-100 gap-4">
-                    <div className="text-center md:text-start">
+                    <div className="text-center md:text-start flex flex-col gap-1">
                         <h2 className="text-xl font-bold text-gray-800">{t.step2}</h2>
-                        <p className="text-sm text-gray-500 mt-1">{t.expensesTitle} <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs font-bold text-gray-600 ml-1">{expenses.length}</span></p>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 text-sm text-gray-500">
+                           <span>{t.expensesTitle} <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs font-bold text-gray-600 ml-1">{expenses.length}</span></span>
+                           <span className="text-gray-300 hidden sm:inline">|</span>
+                           <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                              <span className="text-blue-800 font-medium text-xs">{t.salaryLabel}:</span>
+                              <span className="font-bold text-blue-900">{salary.toLocaleString()}</span>
+                              <button 
+                                onClick={() => setStep(AppStep.SALARY)} 
+                                className="ml-1 text-blue-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-100"
+                                title={t.edit}
+                              >
+                                <Pencil size={12} />
+                              </button>
+                           </div>
+                        </div>
                     </div>
                     <button 
                         onClick={handleOpenAddModal}
@@ -403,7 +619,7 @@ function App() {
             </div>
         )}
 
-        {/* --- STEP 4: DASHBOARD --- */}
+        {/* --- STEP 5: DASHBOARD --- */}
         {step === AppStep.DASHBOARD && (
           <div className="animate-fade-in space-y-6">
             
@@ -492,7 +708,7 @@ function App() {
 
       </main>
 
-      {/* Modal */}
+      {/* Add Expense Modal */}
       {isModalOpen && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in"
@@ -514,6 +730,12 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Blocking Error Modal (For Total Salary Check) */}
+      {renderBlockingModalContent()}
+
+      {/* Warning Modal (For Category Limit Checks - Non Blocking) */}
+      {renderWarningModalContent()}
 
       {/* Persistent Footer - Centered always */}
       <footer className="fixed bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 py-3 px-4 shadow-[0_-5px_25px_rgba(0,0,0,0.03)] z-40 flex justify-center items-center transition-all">

@@ -6,9 +6,10 @@ export enum ExpenseType {
 
 export enum AppStep {
   SALARY = 1,
-  ADVISOR = 2,
-  EXPENSES = 3,
-  DASHBOARD = 4
+  WIZARD = 2,
+  ADVISOR = 3,
+  EXPENSES = 4,
+  DASHBOARD = 5
 }
 
 export type Language = 'ar' | 'en';
