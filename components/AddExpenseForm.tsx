@@ -29,7 +29,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   const [amount, setAmount] = useState<string>('');
   const [type, setType] = useState<ExpenseType>(ExpenseType.NEED);
   const [notes, setNotes] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [advice, setAdvice] = useState<string | null>(null);
   
   // Determine which suggestions to show
@@ -41,7 +41,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
       setAmount(editingExpense.amount.toString());
       setType(editingExpense.type);
       setNotes(editingExpense.notes || '');
-      setError(null);
+      setWarning(null);
       setAdvice(null);
     }
   }, [editingExpense]);
@@ -59,48 +59,64 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
     }
   }, [name, lang]);
 
+  // Real-time validation for UI feedback (non-blocking)
+  useEffect(() => {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+        setWarning(null);
+        setAdvice(null);
+        return;
+    }
+
+    const amountDiff = editingExpense ? numAmount - editingExpense.amount : numAmount;
+    
+    if (currentTotal + amountDiff > salary) {
+        const deficit = (currentTotal + amountDiff) - salary;
+        setWarning(`${t.errorSalaryExceeded} (${deficit.toLocaleString()})`);
+        
+        const otherExpenses = expenses.filter(e => editingExpense ? e.id !== editingExpense.id : true);
+        const currentWants = otherExpenses.filter(e => e.type === ExpenseType.WANT).reduce((sum, e) => sum + e.amount, 0);
+        const wantsPct = (currentWants / salary) * 100;
+        
+        const largestWant = otherExpenses
+            .filter(e => e.type === ExpenseType.WANT)
+            .sort((a, b) => b.amount - a.amount)[0];
+
+        let generatedAdvice = "";
+
+        if (lang === 'ar') {
+            if (wantsPct > 30 && largestWant) {
+                generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}%). جرب تقليل بند "${largestWant.name}".`;
+            } else if (largestWant) {
+                generatedAdvice = `توصية الخبير: حاول تقليل الكماليات مثل "${largestWant.name}".`;
+            } else {
+                generatedAdvice = `توصية الخبير: ميزانيتك مضغوطة. راجع مصروفاتك.`;
+            }
+        } else {
+            if (wantsPct > 30 && largestWant) {
+                generatedAdvice = `Expert Tip: Your 'Wants' are high (${Math.round(wantsPct)}%). Try reducing "${largestWant.name}".`;
+            } else if (largestWant) {
+                generatedAdvice = `Expert Tip: Try reducing luxuries like "${largestWant.name}".`;
+            } else {
+                generatedAdvice = `Expert Tip: Your budget is tight. Review your needs.`;
+            }
+        }
+        setAdvice(generatedAdvice);
+    } else {
+        setWarning(null);
+        setAdvice(null);
+    }
+  }, [amount, currentTotal, salary, editingExpense, expenses, lang, t.errorSalaryExceeded]);
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = parseFloat(amount);
     if (!name || isNaN(numAmount) || numAmount <= 0) return;
 
-    const amountDiff = editingExpense ? numAmount - editingExpense.amount : numAmount;
-    if (currentTotal + amountDiff > salary) {
-      const deficit = (currentTotal + amountDiff) - salary;
-      setError(`${t.errorSalaryExceeded} (${deficit.toLocaleString()})`);
-      
-      const otherExpenses = expenses.filter(e => editingExpense ? e.id !== editingExpense.id : true);
-      const currentWants = otherExpenses.filter(e => e.type === ExpenseType.WANT).reduce((sum, e) => sum + e.amount, 0);
-      const wantsPct = (currentWants / salary) * 100;
-      
-      const largestWant = otherExpenses
-        .filter(e => e.type === ExpenseType.WANT)
-        .sort((a, b) => b.amount - a.amount)[0];
-
-      let generatedAdvice = "";
-
-      if (lang === 'ar') {
-        if (wantsPct > 30 && largestWant) {
-            generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}%). جرب تقليل بند "${largestWant.name}".`;
-        } else if (largestWant) {
-            generatedAdvice = `توصية الخبير: حاول تقليل الكماليات مثل "${largestWant.name}".`;
-        } else {
-            generatedAdvice = `توصية الخبير: ميزانيتك مضغوطة. راجع مصروفاتك.`;
-        }
-      } else {
-        if (wantsPct > 30 && largestWant) {
-            generatedAdvice = `Expert Tip: Your 'Wants' are high (${Math.round(wantsPct)}%). Try reducing "${largestWant.name}".`;
-        } else if (largestWant) {
-            generatedAdvice = `Expert Tip: Try reducing luxuries like "${largestWant.name}".`;
-        } else {
-            generatedAdvice = `Expert Tip: Your budget is tight. Review your needs.`;
-        }
-      }
-
-      setAdvice(generatedAdvice);
-      return;
-    }
-
+    // NOTE: Removed the blocking return logic. 
+    // We allow the user to save even if warning exists.
+    
     let success = false;
     if (editingExpense) {
       success = onUpdate({ ...editingExpense, name, amount: numAmount, type, notes });
@@ -115,7 +131,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
         setNotes('');
         setType(ExpenseType.NEED);
       }
-      setError(null);
+      setWarning(null);
       setAdvice(null);
     }
   };
@@ -222,13 +238,16 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border-r-4 border-red-500 p-4 rounded-md animate-pulse">
+        {warning && (
+          <div className="bg-amber-50 border-r-4 border-amber-500 p-4 rounded-md">
             <div className="flex items-start">
-              <AlertTriangle className="text-red-500 ltr:mr-2 rtl:ml-2 mt-0.5" size={18} />
+              <AlertTriangle className="text-amber-500 ltr:mr-2 rtl:ml-2 mt-0.5" size={18} />
               <div>
-                <p className="text-sm font-bold text-red-700">{error}</p>
-                {advice && <p className="text-sm text-red-600 mt-1 bg-white/50 p-2 rounded">{advice}</p>}
+                <p className="text-sm font-bold text-amber-700">{warning}</p>
+                {advice && <p className="text-sm text-amber-600 mt-1 bg-white/50 p-2 rounded">{advice}</p>}
+                <p className="text-xs text-amber-500 mt-2 font-bold underline cursor-pointer" onClick={handleSubmit}>
+                    {lang === 'ar' ? 'حفظ المصروف وتجاهل التنبيه' : 'Save anyway'}
+                </p>
               </div>
             </div>
           </div>

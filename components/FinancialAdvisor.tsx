@@ -1,296 +1,210 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
-import { Send, Bot, User, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react';
-import { Expense, ExpenseType, Language, BudgetRule } from '../types';
+import React, { useState, useEffect } from 'react';
+import { GoogleGenAI } from "@google/genai";
+import { Bot, ArrowRight, ArrowLeft, PieChart, Sparkles } from 'lucide-react';
+import { Expense, Language, BudgetRule, ExpenseType } from '../types';
 import { TRANSLATIONS } from '../constants';
 
 interface FinancialAdvisorProps {
   salary: number;
-  onAddExpense: (expense: Omit<Expense, 'id'>) => void;
+  expenses: Expense[];
   onUpdateRule: (rule: BudgetRule) => void;
   onFinish: () => void;
   lang: Language;
 }
 
-interface Message {
-  id: string;
-  sender: 'ai' | 'user';
-  text: string;
-}
-
 export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({ 
   salary, 
-  onAddExpense, 
-  onUpdateRule,
+  expenses,
+  onUpdateRule, 
   onFinish, 
   lang 
 }) => {
   const t = TRANSLATIONS[lang];
   const isRtl = lang === 'ar';
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const chatSessionRef = useRef<Chat | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [analysisResult, setAnalysisResult] = useState<{ message: string, rule: BudgetRule | null }>({ message: '', rule: null });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Function to calculate rule locally if AI fails (Fallback)
+  const performLocalAnalysis = () => {
+      const totalNeeds = expenses
+        .filter(e => e.type === ExpenseType.NEED)
+        .reduce((sum, e) => sum + e.amount, 0);
+      
+      const needsPct = salary > 0 ? (totalNeeds / salary) * 100 : 0;
+      let rule = { needs: 50, wants: 30, savings: 20 };
+      let message = "";
+
+      if (needsPct > 65) {
+          rule = { needs: 70, wants: 20, savings: 10 };
+          message = lang === 'ar'
+            ? "نظراً لأن التزاماتك الأساسية مرتفعة (أكثر من 65% من الراتب)، نقترح قاعدة 70/20/10 لتكون الخطة واقعية وقابلة للتطبيق."
+            : "Since your essential obligations are high (over 65% of salary), we suggest the 70/20/10 rule to make the plan realistic and achievable.";
+      } else if (needsPct > 55) {
+          rule = { needs: 60, wants: 20, savings: 20 };
+           message = lang === 'ar'
+            ? "تشكل الاحتياجات جزءاً كبيراً من دخلك، لذا قمنا بتعديل القاعدة إلى 60/20/20. هذا سيمنحك مرونة أكبر في إدارة المصاريف الضرورية دون الضغط على ميزانيتك."
+            : "Needs make up a large part of your income, so we adjusted the rule to 60/20/20. This gives you more flexibility in managing essentials without straining your budget.";
+      } else {
+           message = lang === 'ar' 
+            ? "بناءً على مصاريفك الحالية، وضعك المالي يسمح بتطبيق القاعدة الذهبية 50/30/20. هذا التوزيع يضمن توازناً مثالياً بين الالتزامات، الرفاهية، والادخار للمستقبل." 
+            : "Based on your current expenses, your financial situation allows for the golden 50/30/20 rule. This distribution ensures a perfect balance between obligations, lifestyle, and savings.";
+      }
+
+      setAnalysisResult({
+          message,
+          rule
+      });
+      onUpdateRule(rule);
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const runAnalysis = async () => {
+      setIsLoading(true);
+      
+      // Artificial delay for better UX even if local
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-  useEffect(() => {
-    const initChat = async () => {
-      // Direct check of process.env.API_KEY to ensure bundlers replace it correctly
       if (!process.env.API_KEY) {
-         setMessages([{
-             id: 'error',
-             sender: 'ai',
-             text: lang === 'ar' 
-               ? "عذراً، مفتاح API غير متوفر. يرجى التأكد من إعدادات البيئة." 
-               : "Sorry, API Key is missing. Please check environment settings."
-         }]);
+         performLocalAnalysis();
+         setIsLoading(false);
          return;
       }
 
       try {
-        // Initialize with direct process.env access
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
+        const expensesJSON = JSON.stringify(expenses.map(e => ({ name: e.name, amount: e.amount, type: e.type })));
+        
         const systemInstruction = `
-          You are 'Qawam Assistant', a financial advisor.
           Context: User Salary = ${salary} ${t.currency}. Language: ${lang === 'ar' ? 'Arabic' : 'English'}.
           
-          Goal:
-          1. Determine the best 50/30/20 rule adjustment. 
-             - If single/simple: 50/30/20.
-             - If married/high debt/family: Suggest 60/30/10 or 60/20/20 (Needs/Wants/Savings).
-          2. Extract monthly expenses from the conversation.
-
-          Protocol:
-          - Ask SHORT, SINGLE questions. Be friendly.
-          - Start by asking about social status/family/obligations.
-          - Then ask about FIXED bills (Rent, Loan, Utilities).
-          - Then ask about VARIABLE expenses (Food, Transport).
-          - Then Luxuries.
+          ROLE:
+          You are "Qawam's Financial Analyzer".
           
-          CRITICAL OUTPUT FORMAT:
-          If you detect expenses or a rule change, append a JSON block at the VERY END of your response. 
-          Do not mention the JSON in the text.
+          TASK:
+          1. Analyze the provided list of expenses.
+          2. Calculate the actual Needs ratio.
+          3. Recommend the BEST budget rule based on their actual situation:
+             - If Needs are around 50%, recommend 50/30/20.
+             - If Needs are high (e.g. > 55%), recommend 60/20/20 or 70/20/10 to be realistic.
+             - Explain clearly why this rule fits them.
+          4. Return a JSON response.
           
-          JSON Schema:
-          \`\`\`json
+          OUTPUT FORMAT (JSON ONLY):
           {
-            "rule": { "needs": 60, "wants": 20, "savings": 20 }, // Optional, send only if changed
-            "expenses": [ // Optional
-              { "name": "Rent", "amount": 5000, "type": "احتياج" }, // Type must be one of: 'احتياج', 'رغبة', 'ادخار واستثمار' (even in English mode, map internally or use Arabic enum values)
-              { "name": "Coffee", "amount": 200, "type": "رغبة" }
-            ]
+            "analysis_message": "A concise explanation (max 3 sentences) of why this rule is chosen based on their high/low needs.",
+            "recommended_rule": { "needs": 60, "wants": 20, "savings": 20 }
           }
-          \`\`\`
-          Type mapping: 
-          - Needs -> 'احتياج'
-          - Wants -> 'رغبة'
-          - Savings -> 'ادخار واستثمار'
         `;
 
-        const chat = ai.chats.create({
+        const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
+          contents: `User Data: ${expensesJSON}. Analyze and recommend rule in JSON.`,
           config: {
             systemInstruction: systemInstruction,
-            temperature: 0.7,
+            temperature: 0.1, 
+            responseMimeType: 'application/json'
           },
         });
         
-        chatSessionRef.current = chat;
-        
-        // Initial Message
-        setMessages([{
-          id: '1',
-          sender: 'ai',
-          text: t.chatWelcome
-        }]);
+        const rawText = response.text || "";
+        const data = JSON.parse(rawText);
 
-      } catch (error) {
-        console.error("Failed to init chat", error);
-        setMessages([{
-             id: 'init-error',
-             sender: 'ai',
-             text: lang === 'ar' ? "فشل تهيئة المحادثة. يرجى المحاولة لاحقاً." : "Failed to initialize chat."
-        }]);
+        if (data.recommended_rule && data.analysis_message) {
+            setAnalysisResult({
+                message: data.analysis_message,
+                rule: data.recommended_rule
+            });
+            onUpdateRule(data.recommended_rule);
+        } else {
+            throw new Error("Invalid format");
+        }
+
+      } catch (err: any) {
+        console.warn("AI Analysis Failed (Quota or Error), switching to local fallback.", err);
+        // Fallback to local analysis on ANY error (including 429)
+        performLocalAnalysis();
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    initChat();
-  }, [salary, lang, t.currency, t.chatWelcome]);
-
-  const handleSend = async () => {
-    if (!input.trim() || !chatSessionRef.current) return;
-
-    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: input };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setIsTyping(true);
-
-    try {
-      const response: GenerateContentResponse = await chatSessionRef.current.sendMessage({ message: input });
-      const rawText = response.text || "";
-      
-      // Parse JSON
-      const jsonMatch = rawText.match(/```json\s*([\s\S]*?)\s*```/);
-      let displayText = rawText;
-
-      if (jsonMatch) {
-        try {
-          const jsonStr = jsonMatch[1];
-          const data = JSON.parse(jsonStr);
-          
-          // Execute Actions
-          if (data.rule) {
-            onUpdateRule(data.rule);
-          }
-          if (data.expenses && Array.isArray(data.expenses)) {
-            data.expenses.forEach((exp: any) => {
-              // Ensure type matches enum
-              let type: ExpenseType = ExpenseType.NEED;
-              if (exp.type === 'رغبة' || exp.type === 'Wants' || exp.type === 'Want') type = ExpenseType.WANT;
-              if (exp.type === 'ادخار واستثمار' || exp.type === 'Savings' || exp.type === 'Saving') type = ExpenseType.SAVING;
-              if (exp.type === 'احتياج' || exp.type === 'Needs' || exp.type === 'Need') type = ExpenseType.NEED;
-
-              onAddExpense({
-                name: exp.name,
-                amount: typeof exp.amount === 'number' ? exp.amount : parseFloat(exp.amount),
-                type: type,
-                notes: 'Auto-detected'
-              });
-            });
-          }
-
-          // Remove JSON from display
-          displayText = rawText.replace(jsonMatch[0], '').trim();
-        } catch (e) {
-          console.error("JSON Parse Error", e);
-        }
-      }
-
-      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'ai', text: displayText }]);
-
-    } catch (error: any) {
-      console.error("Chat Error:", error);
-      
-      let errorMsg = lang === 'ar' ? "عذراً، حدث خطأ في الاتصال." : "Sorry, connection error.";
-      
-      // Try to extract readable error message from JSON error string
-      let detailedMsg = error.message || "";
-      if (typeof detailedMsg === 'string' && detailedMsg.includes('{')) {
-          try {
-             // Attempt to extract the JSON part if it's mixed with text or is raw JSON
-             const jsonPart = detailedMsg.substring(detailedMsg.indexOf('{'));
-             const errObj = JSON.parse(jsonPart);
-             if (errObj.error && errObj.error.message) {
-                 detailedMsg = errObj.error.message;
-             }
-          } catch (e) {
-             // ignore parse error
-          }
-      }
-
-      if (detailedMsg.includes("API key not valid") || detailedMsg.includes("API_KEY_INVALID")) {
-          errorMsg = lang === 'ar' 
-             ? "عذراً، مفتاح API المستخدم غير صالح. يرجى التحقق من المفتاح." 
-             : "Invalid API Key provided.";
-      } else {
-          errorMsg += ` (${detailedMsg.substring(0, 50)}...)`;
-      }
-      
-      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'ai', text: errorMsg }]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+    runAnalysis();
+  }, [salary, expenses, lang, t.currency]);
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-fade-in relative">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center shadow-md z-10">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-full">
-            <Bot size={24} />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg">{t.advisorStep}</h3>
-            <p className="text-xs text-blue-100 opacity-80">Gemini AI Powered</p>
-          </div>
-        </div>
-        <button 
-          onClick={onFinish}
-          className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-        >
-          {t.skipToExpenses}
-          {isRtl ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
-        </button>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 animate-fade-in relative overflow-hidden">
+      
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"></div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div 
-              className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex items-start gap-2 ${
-                msg.sender === 'user' 
-                  ? 'bg-blue-600 text-white rounded-br-none' 
-                  : (msg.id.includes('error') ? 'bg-red-50 text-red-800 border border-red-100' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none')
-              }`}
+      {isLoading ? (
+        <div className="text-center flex flex-col items-center">
+            <div className="relative w-20 h-20 mb-6">
+                 <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+                 <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+                 <div className="absolute inset-0 flex items-center justify-center text-indigo-600">
+                    <Sparkles size={24} className="animate-pulse" />
+                 </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {lang === 'ar' ? 'جاري تحليل مصروفاتك...' : 'Analyzing your expenses...'}
+            </h3>
+            <p className="text-gray-500 text-sm">
+                {lang === 'ar' ? 'يقوم المستشار الذكي باختيار أفضل تقسيم لميزانيتك' : 'The AI advisor is selecting the best budget split'}
+            </p>
+        </div>
+      ) : (
+        <div className="w-full max-w-lg animate-fade-in">
+            <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center p-3 bg-indigo-50 text-indigo-600 rounded-full mb-4">
+                    <Bot size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    {lang === 'ar' ? 'اكتمل التحليل!' : 'Analysis Complete!'}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                    {analysisResult.message}
+                </p>
+            </div>
+
+            {analysisResult.rule && (
+                <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl p-6 mb-8 shadow-sm relative overflow-hidden">
+                     <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <PieChart size={100} />
+                     </div>
+                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 relative z-10">
+                         {lang === 'ar' ? 'القاعدة المالية المقترحة' : 'Recommended Budget Rule'}
+                     </h4>
+                     <div className="flex justify-between items-end relative z-10">
+                         <div className="text-center">
+                             <div className="text-2xl font-black text-red-500">{analysisResult.rule.needs}%</div>
+                             <div className="text-xs font-bold text-gray-400 mt-1">{lang === 'ar' ? 'احتياجات' : 'Needs'}</div>
+                         </div>
+                         <div className="text-gray-300 font-light text-2xl pb-4">/</div>
+                         <div className="text-center">
+                             <div className="text-2xl font-black text-amber-500">{analysisResult.rule.wants}%</div>
+                             <div className="text-xs font-bold text-gray-400 mt-1">{lang === 'ar' ? 'رغبات' : 'Wants'}</div>
+                         </div>
+                         <div className="text-gray-300 font-light text-2xl pb-4">/</div>
+                         <div className="text-center">
+                             <div className="text-2xl font-black text-emerald-500">{analysisResult.rule.savings}%</div>
+                             <div className="text-xs font-bold text-gray-400 mt-1">{lang === 'ar' ? 'ادخار' : 'Savings'}</div>
+                         </div>
+                     </div>
+                </div>
+            )}
+
+            <button 
+                onClick={onFinish}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
             >
-               {msg.id.includes('error') && <AlertTriangle size={16} className="mt-0.5 shrink-0" />}
-               <span>{msg.text}</span>
-            </div>
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start animate-pulse">
-            <div className="bg-gray-200 text-gray-500 px-4 py-2 rounded-full text-xs rounded-bl-none">
-              ...
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="p-4 bg-white border-t border-gray-100">
-        <div className="flex gap-2 relative">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t.chatPlaceholder}
-            className="flex-1 bg-gray-100 text-gray-800 placeholder-gray-400 border-0 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none"
-            autoFocus
-          />
-          <button 
-            onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className={`p-3 rounded-xl transition-all shadow-md ${
-              !input.trim() || isTyping 
-               ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-               : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95'
-            }`}
-          >
-            <Send size={20} className={isRtl ? 'rotate-180' : ''} />
-          </button>
+                {lang === 'ar' ? 'عرض النتائج التفصيلية' : 'View Detailed Results'}
+                {isRtl ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
+            </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

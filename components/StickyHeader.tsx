@@ -27,6 +27,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   
   const steps = [
     { id: AppStep.SALARY, label: t.step1 },
+    { id: AppStep.WIZARD, label: t.stepWizard },
     { id: AppStep.ADVISOR, label: t.advisorStep },
     { id: AppStep.EXPENSES, label: t.step2 },
     { id: AppStep.DASHBOARD, label: t.step3 },
@@ -51,6 +52,10 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
                     <Users size={12} />
                     <span>{visitorCount.toLocaleString()}</span>
                     <span>{t.visitors}</span>
+                </div>
+                {/* Version Indicator */}
+                <div className="hidden sm:block px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-[10px] font-mono text-gray-400">
+                  v2.0
                 </div>
             </div>
 
