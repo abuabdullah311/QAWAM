@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from './library/supabaseClient';
+import { Auth } from './components/Auth';
+import { UserManagementModal } from './components/UserManagementModal';
 import { StickyHeader } from './components/StickyHeader';
 import { FinancialChart } from './components/FinancialChart';
 import { TargetVsActualChart } from './components/TargetVsActualChart';
@@ -7,9 +10,9 @@ import { AddExpenseForm } from './components/AddExpenseForm';
 import { PrintableReport } from './components/PrintableReport';
 import { FinancialAdvisor } from './components/FinancialAdvisor';
 import { ExpenseWizard } from './components/ExpenseWizard';
-import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule } from './types';
+import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule, UserProfile } from './types';
 import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from './constants';
-import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X } from 'lucide-react';
+import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -72,7 +75,13 @@ interface WarningState {
   suggestions: { name: string; amount: number; reduceBy: number }[];
 }
 
+let isPageLoaded = false;
+
 function App() {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+
   const [lang, setLang] = useState<Language>('ar');
   const [step, setStep] = useState<AppStep>(AppStep.SALARY);
   const [salary, setSalary] = useState<number>(0);
@@ -89,26 +98,80 @@ function App() {
   const [warningState, setWarningState] = useState<WarningState | null>(null);
   
   const [visitorCount, setVisitorCount] = useState<number>(12050);
+  const [isLiveCount, setIsLiveCount] = useState(false);
 
   const t = TRANSLATIONS[lang];
   const isRtl = lang === 'ar';
 
-  // Initialize from LocalStorage
+  useEffect(() => {
+    checkSession();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setCurrentUser(null);
+        setIsAuthLoading(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await fetchUserProfile(session.user.id);
+    } else {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile', error);
+        // Fallback: If no profile exists or recursion error occurs, 
+        // grant temporary admin UI access so the user can copy & run the fix SQL.
+        setCurrentUser({ id: userId, email: '', role: 'admin' });
+      } else {
+        setCurrentUser(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Initialize from LocalStorage and Visitor Logic
   useEffect(() => {
     const savedExpenses = localStorage.getItem('qawam_expenses');
     const savedSalary = localStorage.getItem('qawam_salary');
-    const savedVisitor = localStorage.getItem('qawam_visitors');
     const savedRule = localStorage.getItem('qawam_rule');
     
-    // Simple mock visitor logic
-    let count = 12050;
-    if (savedVisitor) {
-       count = parseInt(savedVisitor);
-    } else {
-       count = 12050 + Math.floor(Math.random() * 50);
-       localStorage.setItem('qawam_visitors', count.toString());
+    // Visitor Algorithm
+    let globalVisits = parseInt(localStorage.getItem('qawam_total_page_views') || '120', 10);
+    
+    if (!isPageLoaded) {
+      globalVisits += 1;
+      localStorage.setItem('qawam_total_page_views', globalVisits.toString());
+      isPageLoaded = true;
     }
-    setVisitorCount(count);
+    
+    setVisitorCount(globalVisits);
+    setIsLiveCount(true);
 
     if (savedRule) {
       setBudgetRule(JSON.parse(savedRule));
@@ -470,8 +533,23 @@ function App() {
       );
   };
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-['29LT_Azer',sans-serif]" dir="rtl">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500 font-medium">جاري التحقق من مسار الدخول...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <Auth onLoginSuccess={checkSession} />;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-28 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 font-['29LT_Azer',sans-serif] pb-28 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
       <StickyHeader 
         salary={salary} 
         metrics={metrics} 
@@ -480,6 +558,11 @@ function App() {
         visitorCount={visitorCount}
         lang={lang}
         setLang={setLang}
+        isLive={isLiveCount}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onOpenAdmin={() => setShowAdminModal(true)}
+        onGoToWizard={() => setStep(AppStep.WIZARD)}
       />
 
       {/* Hidden Report for PDF */}
@@ -497,37 +580,46 @@ function App() {
         
         {/* --- STEP 1: SALARY --- */}
         {step === AppStep.SALARY && (
-            <div className="animate-fade-in flex flex-col items-center justify-center min-h-[50vh]">
-                 <div className="bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-white/50 p-8 w-full max-w-lg text-center relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500"></div>
+            <div className="animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
+                 <div className="bg-white/80 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-white p-10 w-full max-w-xl text-center relative overflow-hidden transition-all duration-500 hover:shadow-[0_16px_60px_rgba(0,0,0,0.06)]">
                     
-                    <h2 className="text-2xl font-black text-gray-800 mb-6">{t.salaryLabel}</h2>
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                       <Wallet className="text-white relative z-10" size={36} strokeWidth={1.5} />
+                    </div>
+
+                    <h2 className="text-3xl font-bold text-slate-800 mb-3 tracking-tight">{t.salaryLabel}</h2>
+                    <p className="text-sm font-medium text-slate-500 mb-8">{t.salaryHint}</p>
                     
-                    <div className="relative mb-6 group">
+                    <div className="relative mb-10 group bg-slate-50/50 rounded-3xl p-6 border border-slate-100 transition-colors hover:bg-slate-50">
                         <input
                         type="number"
                         value={salary || ''}
                         onChange={(e) => setSalary(parseFloat(e.target.value))}
                         placeholder="0"
                         autoFocus
-                        className="w-full font-black text-gray-800 border-b-2 border-gray-100 focus:border-blue-600 outline-none bg-transparent transition-all placeholder-gray-200 text-6xl text-center py-6 group-hover:border-blue-200"
+                        className="w-full font-bold text-slate-900 bg-transparent outline-none transition-all placeholder-slate-300 text-5xl sm:text-7xl text-center tracking-tighter"
                         />
-                        <span className={`absolute text-gray-400 font-bold bottom-8 text-xl pointer-events-none transition-all ${isRtl ? 'left-4' : 'right-4'}`}>{t.currency}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 bg-blue-50 p-4 rounded-xl text-xs text-blue-800 mb-8 justify-center border border-blue-100">
-                        <Info size={16} className="shrink-0" />
-                        <p className="font-medium">{t.salaryHint}</p>
+                        <span className={`absolute text-slate-400 font-bold bottom-8 text-xl pointer-events-none transition-all ${isRtl ? 'left-6' : 'right-6'}`}>{t.currency}</span>
                     </div>
 
                     <button 
                         onClick={handleNextStep}
                         disabled={salary <= 0}
-                        className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 transform active:scale-95 ${salary > 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xl shadow-blue-200 hover:shadow-2xl hover:-translate-y-1' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                        className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 transform active:scale-95 ${salary > 0 ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20 hover:bg-slate-800' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                     >
                         <span>{t.next}</span>
-                        {isRtl ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
+                        {isRtl ? <ArrowLeft size={20} strokeWidth={2.5} /> : <ArrowRight size={20} strokeWidth={2.5} />}
                     </button>
+
+                    {expenses.length === 0 && (
+                        <button
+                          onClick={() => setStep(AppStep.EXPENSES)}
+                          disabled={salary <= 0}
+                          className={`mt-4 w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all duration-300 transform active:scale-95 border-2 ${salary > 0 ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 shadow-sm' : 'bg-transparent border-slate-100 text-slate-300 cursor-not-allowed'}`}
+                        >
+                          {lang === 'ar' ? 'تخطي الدليل وإدخال المصاريف يدوياً' : 'Skip Wizard & Enter Manually'}
+                        </button>
+                    )}
                  </div>
             </div>
         )}
@@ -556,39 +648,40 @@ function App() {
 
         {/* --- STEP 4: EXPENSES LIST --- */}
         {step === AppStep.EXPENSES && (
-            <div className="animate-fade-in space-y-6">
+            <div className="animate-fade-in space-y-8">
                 
                 {/* Header Action */}
-                <div className="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-100 gap-4">
-                    <div className="text-center md:text-start flex flex-col gap-1">
-                        <h2 className="text-xl font-bold text-gray-800">{t.step2}</h2>
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 text-sm text-gray-500">
-                           <span>{t.expensesTitle} <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs font-bold text-gray-600 ml-1">{expenses.length}</span></span>
-                           <span className="text-gray-300 hidden sm:inline">|</span>
-                           <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
-                              <span className="text-blue-800 font-medium text-xs">{t.salaryLabel}:</span>
-                              <span className="font-bold text-blue-900">{salary.toLocaleString()}</span>
+                <div className="flex flex-col md:flex-row justify-between items-center bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 gap-5">
+                    <div className="text-center md:text-start flex flex-col gap-2">
+                        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{t.step2}</h2>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-1 text-sm text-slate-500">
+                           <span className="flex items-center gap-1.5">{t.expensesTitle} <span className="bg-slate-100 px-2.5 py-0.5 rounded-full text-xs font-bold text-slate-600">{expenses.length}</span></span>
+                           <span className="w-1.5 h-1.5 rounded-full bg-slate-200 hidden sm:block"></span>
+                           <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                              <Wallet size={14} className="text-slate-400" />
+                              <span className="text-slate-500 font-medium text-xs">{t.salaryLabel}:</span>
+                              <span className="font-bold text-slate-700">{salary.toLocaleString()}</span>
                               <button 
                                 onClick={() => setStep(AppStep.SALARY)} 
-                                className="ml-1 text-blue-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-100"
+                                className="ml-1 text-slate-400 hover:text-blue-500 transition-colors p-1 rounded-full hover:bg-blue-50"
                                 title={t.edit}
                               >
-                                <Pencil size={12} />
+                                <Pencil size={12} strokeWidth={2.5} />
                               </button>
                            </div>
                         </div>
                     </div>
                     <button 
                         onClick={handleOpenAddModal}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg shadow-blue-200 flex items-center gap-2 font-bold transition-all hover:-translate-y-0.5 active:scale-95 w-full md:w-auto justify-center"
+                        className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-2xl shadow-xl shadow-slate-900/10 flex items-center gap-2 font-bold transition-all hover:-translate-y-0.5 active:scale-95 w-full md:w-auto justify-center"
                     >
-                        <Plus size={20} />
+                        <Plus size={20} strokeWidth={2.5} />
                         {t.addExpense}
                     </button>
                 </div>
 
                 {/* The List */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[300px] overflow-hidden">
+                <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 min-h-[300px] overflow-hidden">
                      <ExpenseTable 
                         expenses={expenses} 
                         salary={salary} 
@@ -599,10 +692,10 @@ function App() {
                 </div>
 
                 {/* Nav Buttons */}
-                <div className="flex justify-between mt-8 gap-4">
+                <div className="flex justify-between mt-10 gap-4">
                      <button 
                         onClick={handlePrevStep}
-                        className="px-6 py-3 rounded-xl text-gray-500 hover:bg-gray-100 font-bold flex items-center gap-2 transition-colors"
+                        className="px-8 py-4 rounded-2xl text-slate-500 bg-white hover:bg-slate-50 border border-slate-100 shadow-sm font-bold flex items-center gap-2 transition-all active:scale-95"
                      >
                         {isRtl ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
                         {t.back}
@@ -610,10 +703,10 @@ function App() {
                      
                      <button 
                         onClick={handleNextStep}
-                        className="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5 active:scale-95"
+                        className="px-10 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center gap-2 shadow-xl shadow-blue-200 transition-all hover:-translate-y-0.5 active:scale-95"
                      >
                         <span>{t.finish}</span>
-                        {isRtl ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
+                        {isRtl ? <ArrowLeft size={20} strokeWidth={2.5} /> : <ArrowRight size={20} strokeWidth={2.5} />}
                      </button>
                 </div>
             </div>
@@ -621,18 +714,18 @@ function App() {
 
         {/* --- STEP 5: DASHBOARD --- */}
         {step === AppStep.DASHBOARD && (
-          <div className="animate-fade-in space-y-6">
+          <div className="animate-fade-in space-y-8">
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Charts Column */}
-              <div className="lg:col-span-1 flex flex-col gap-4">
-                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
-                    <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">{t.expensesTitle}</h3>
+              <div className="lg:col-span-1 flex flex-col gap-6">
+                 <div className="bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+                    <h3 className="font-bold text-slate-700 mb-4 text-center text-sm tracking-tight">{t.expensesTitle}</h3>
                     <FinancialChart metrics={metrics} lang={lang} />
                  </div>
                  
-                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
-                    <h3 className="font-bold text-gray-700 mb-2 text-center text-sm">{t.target} vs {t.actual}</h3>
+                 <div className="bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+                    <h3 className="font-bold text-slate-700 mb-4 text-center text-sm tracking-tight">{t.target} vs {t.actual}</h3>
                     <TargetVsActualChart 
                         salary={salary} 
                         metrics={metrics} 
@@ -646,19 +739,19 @@ function App() {
               <div className="lg:col-span-2 flex flex-col gap-6">
                  {getAnalysis()}
                  
-                 <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white rounded-2xl p-8 shadow-xl shadow-indigo-100 flex flex-col justify-center h-full min-h-[160px] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                 <div className="bg-[#000000] text-white rounded-[2.5rem] p-10 shadow-[0_16px_40px_rgba(0,0,0,0.15)] flex flex-col justify-center h-full min-h-[160px] relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-150"></div>
                     <div className="relative z-10">
-                        <h4 className="text-indigo-200 text-sm font-medium mb-2 uppercase tracking-wider">{t.savings}</h4>
-                        <div className="text-5xl font-black mb-3 flex items-baseline gap-2 tracking-tight">
+                        <h4 className="text-slate-400 text-xs font-bold mb-3 uppercase tracking-widest">{t.savings}</h4>
+                        <div className="text-6xl font-black mb-4 flex items-baseline gap-2 tracking-tighter">
                             {metrics.totalSavingsCalculated.toLocaleString()} 
-                            <span className="text-xl font-normal text-indigo-300">{t.currency}</span>
+                            <span className="text-2xl font-bold text-slate-500">{t.currency}</span>
                         </div>
                         
                         {metrics.remainingSalary > 0 && (
-                        <div className="bg-indigo-950/30 backdrop-blur-sm rounded-lg px-4 py-2 text-sm flex items-center gap-2 w-fit mt-2 border border-white/10">
-                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span>
-                            {t.remaining}: <span className="font-mono font-bold">{metrics.remainingSalary.toLocaleString()}</span>
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-2.5 text-sm flex items-center gap-3 w-fit mt-4 border border-white/10">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.6)]"></span>
+                            {t.remaining}: <span className="font-mono font-bold tracking-tight">{metrics.remainingSalary.toLocaleString()}</span>
                         </div>
                         )}
                     </div>
@@ -667,18 +760,18 @@ function App() {
                  <div className="flex flex-col sm:flex-row gap-4">
                      <button 
                         onClick={handlePrevStep}
-                        className="flex-1 bg-white border-2 border-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 flex justify-center items-center gap-2 transition-all hover:border-gray-200 shadow-sm"
+                        className="flex-1 bg-white border border-slate-200 text-slate-700 py-4 rounded-2xl font-bold hover:bg-slate-50 flex justify-center items-center gap-2 transition-all hover:border-slate-300 shadow-sm active:scale-95"
                      >
-                        <Edit2 size={16} />
+                        <Edit2 size={18} strokeWidth={2.5} />
                         {t.edit} {t.step2}
                      </button>
 
                      <button 
                         onClick={exportPDF}
                         disabled={isExporting}
-                        className={`flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 flex justify-center items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+                        className={`flex-1 bg-slate-900 border border-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 flex justify-center items-center gap-2 transition-all shadow-xl shadow-slate-900/10 active:scale-95 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
                      >
-                        {isExporting ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={16} />}
+                        {isExporting ? <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div> : <Download size={18} strokeWidth={2.5} />}
                         <span>{t.exportPDF}</span>
                      </button>
                  </div>
@@ -687,10 +780,10 @@ function App() {
 
             {/* Expenses Table (Read Only view or quick edit) */}
             {expenses.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-fade-in mt-6 overflow-hidden">
-                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                   <h3 className="font-bold text-gray-800 text-sm">{t.expensesTitle}</h3>
-                   <button onClick={() => setStep(AppStep.EXPENSES)} className="text-blue-600 text-xs font-bold hover:underline">
+              <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 animate-fade-in mt-8 overflow-hidden">
+                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-transparent">
+                   <h3 className="font-bold text-slate-800 text-sm">{t.expensesTitle}</h3>
+                   <button onClick={() => setStep(AppStep.EXPENSES)} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
                       {t.edit}
                    </button>
                 </div>
@@ -746,6 +839,14 @@ function App() {
            </a>
         </div>
       </footer>
+
+      {/* Admin User Management Modal */}
+      {showAdminModal && currentUser?.role === 'admin' && (
+        <UserManagementModal 
+          currentUser={currentUser} 
+          onClose={() => setShowAdminModal(false)} 
+        />
+      )}
 
     </div>
   );

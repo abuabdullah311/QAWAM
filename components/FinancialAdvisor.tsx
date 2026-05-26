@@ -134,63 +134,60 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
   }, [salary, expenses, lang, t.currency]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 animate-fade-in relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center min-h-[440px] w-full bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-white p-10 animate-fade-in relative overflow-hidden transition-all duration-500">
       
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"></div>
-
       {isLoading ? (
         <div className="text-center flex flex-col items-center">
-            <div className="relative w-20 h-20 mb-6">
-                 <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
-                 <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-                 <div className="absolute inset-0 flex items-center justify-center text-indigo-600">
-                    <Sparkles size={24} className="animate-pulse" />
+            <div className="relative w-24 h-24 mb-8">
+                 <div className="absolute inset-0 border-[6px] border-slate-100 rounded-full"></div>
+                 <div className="absolute inset-0 border-[6px] border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                 <div className="absolute inset-0 flex items-center justify-center text-blue-500">
+                    <Sparkles size={28} strokeWidth={2.5} className="animate-pulse" />
                  </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
+            <h3 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight">
                 {lang === 'ar' ? 'جاري تحليل مصروفاتك...' : 'Analyzing your expenses...'}
             </h3>
-            <p className="text-gray-500 text-sm">
+            <p className="text-slate-500 font-medium">
                 {lang === 'ar' ? 'يقوم المستشار الذكي باختيار أفضل تقسيم لميزانيتك' : 'The AI advisor is selecting the best budget split'}
             </p>
         </div>
       ) : (
-        <div className="w-full max-w-lg animate-fade-in">
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center p-3 bg-indigo-50 text-indigo-600 rounded-full mb-4">
-                    <Bot size={32} />
+        <div className="w-full max-w-lg animate-[fadeIn_0.5s_ease-out]">
+            <div className="text-center mb-10">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl mb-6 shadow-lg shadow-indigo-500/20 transform transition-transform hover:scale-105">
+                    <Bot size={36} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                <h3 className="text-3xl font-bold text-slate-800 mb-4 tracking-tight">
                     {lang === 'ar' ? 'اكتمل التحليل!' : 'Analysis Complete!'}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-slate-600 leading-relaxed font-medium bg-slate-50 p-6 rounded-3xl border border-slate-100">
                     {analysisResult.message}
                 </p>
             </div>
 
             {analysisResult.rule && (
-                <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl p-6 mb-8 shadow-sm relative overflow-hidden">
-                     <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <PieChart size={100} />
+                <div className="bg-white border text-center border-slate-100 rounded-3xl p-8 mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300">
+                     <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-5 transition-opacity duration-500 transform scale-150 -translate-y-10">
+                        <PieChart size={160} />
                      </div>
-                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 relative z-10">
+                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 relative z-10">
                          {lang === 'ar' ? 'القاعدة المالية المقترحة' : 'Recommended Budget Rule'}
                      </h4>
-                     <div className="flex justify-between items-end relative z-10">
-                         <div className="text-center">
-                             <div className="text-2xl font-black text-red-500">{analysisResult.rule.needs}%</div>
-                             <div className="text-xs font-bold text-gray-400 mt-1">{lang === 'ar' ? 'احتياجات' : 'Needs'}</div>
+                     <div className="flex justify-between items-center relative z-10 max-w-sm mx-auto">
+                         <div className="text-center flex-1">
+                             <div className="text-4xl font-black text-rose-500 tracking-tighter">{analysisResult.rule.needs}%</div>
+                             <div className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-wide">{lang === 'ar' ? 'احتياجات' : 'Needs'}</div>
                          </div>
-                         <div className="text-gray-300 font-light text-2xl pb-4">/</div>
-                         <div className="text-center">
-                             <div className="text-2xl font-black text-amber-500">{analysisResult.rule.wants}%</div>
-                             <div className="text-xs font-bold text-gray-400 mt-1">{lang === 'ar' ? 'رغبات' : 'Wants'}</div>
+                         <div className="text-slate-200 font-light text-3xl pb-6">/</div>
+                         <div className="text-center flex-1">
+                             <div className="text-4xl font-black text-amber-500 tracking-tighter">{analysisResult.rule.wants}%</div>
+                             <div className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-wide">{lang === 'ar' ? 'رغبات' : 'Wants'}</div>
                          </div>
-                         <div className="text-gray-300 font-light text-2xl pb-4">/</div>
-                         <div className="text-center">
-                             <div className="text-2xl font-black text-emerald-500">{analysisResult.rule.savings}%</div>
-                             <div className="text-xs font-bold text-gray-400 mt-1">{lang === 'ar' ? 'ادخار' : 'Savings'}</div>
+                         <div className="text-slate-200 font-light text-3xl pb-6">/</div>
+                         <div className="text-center flex-1">
+                             <div className="text-4xl font-black text-emerald-500 tracking-tighter">{analysisResult.rule.savings}%</div>
+                             <div className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-wide">{lang === 'ar' ? 'ادخار' : 'Savings'}</div>
                          </div>
                      </div>
                 </div>
@@ -198,10 +195,10 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
 
             <button 
                 onClick={onFinish}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
+                className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold shadow-xl shadow-slate-900/10 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
             >
                 {lang === 'ar' ? 'عرض النتائج التفصيلية' : 'View Detailed Results'}
-                {isRtl ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
+                {isRtl ? <ArrowLeft size={20} strokeWidth={2.5} /> : <ArrowRight size={20} strokeWidth={2.5} />}
             </button>
         </div>
       )}

@@ -32,6 +32,16 @@ export interface Suggestion {
   name: string;
 }
 
+export type UserRole = 'admin' | 'editor' | 'user';
+
+export interface UserProfile {
+  id: string; // auth.uid
+  email: string;
+  role: UserRole;
+  created_at?: string;
+  last_login?: string;
+}
+
 export interface DashboardMetrics {
   totalNeeds: number;
   totalWants: number;
