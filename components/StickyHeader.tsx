@@ -49,69 +49,73 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
       <div className="max-w-5xl mx-auto flex flex-col gap-4">
         
         {/* Apple-styled Pill Header */}
-        <div className="bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-sm rounded-2xl md:rounded-[2rem] p-2 pr-4 pl-2 flex items-center justify-between transition-all duration-300 relative h-16 md:h-16 w-full gap-2">
+        <div className="bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-sm rounded-2xl md:rounded-[2rem] p-3 md:p-2 md:pr-4 md:pl-2 flex flex-col md:flex-row items-center justify-between transition-all duration-300 relative gap-3">
            
-           {/* Right Side (User Info & Sessions - RTL Start) */}
-           <div className="flex flex-col text-start justify-center flex-1 h-full px-2">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full inline-flex items-center w-max font-bold mb-1 ${currentUser.role === 'admin' ? 'text-indigo-600 bg-indigo-50 border border-indigo-100/50' : 'text-slate-600 bg-slate-100 border border-slate-200/50'}`}>
-                {currentUser.role === 'admin' ? (lang === 'ar' ? 'مدير النظام' : 'System Admin') : (lang === 'ar' ? 'مستخدم' : 'User')}
-              </span>
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium whitespace-nowrap pl-1 px-1">
-                 <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-blue-400'}`}></span>
-                 {lang === 'ar' ? 'جلسة نشطة' : 'Active Session'}
+           {/* Top/Center (Logo Area & Visitors) - On Mobile it's top, on Desktop it's absolute center */}
+           <div className="flex items-center justify-between md:justify-center w-full md:w-max px-2 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:bg-white/50 md:backdrop-blur-sm md:py-1.5 md:rounded-full md:border md:border-slate-100/50 md:shadow-sm shrink-0 gap-2 sm:gap-4 md:gap-3">
+              {/* Logo Fallback */}
+              <div className="flex items-center pb-1">
+                 <span className="text-2xl md:text-2xl font-black text-slate-800 tracking-tighter drop-shadow-sm font-serif">قَوَام</span>
               </div>
-           </div>
 
-           {/* Center (Logo Area & Visitors - Absolute Center) */}
-           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center shrink-0 w-max gap-3 sm:gap-4 bg-white/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-slate-100/50 shadow-sm">
-              <div className="flex flex-col items-center justify-center">
+              <div className="hidden md:block w-px h-6 bg-slate-200/80"></div>
+              
+              <div className="flex flex-col items-center justify-center bg-slate-50 md:bg-transparent rounded-lg px-3 md:px-0 py-1 md:py-0 border border-slate-100/60 md:border-none shadow-sm md:shadow-none">
                  <div className="flex items-center gap-1 text-xs font-black text-slate-700" title={lang === 'ar' ? 'زيارات الموقع' : 'Page Views'}>
                     <Users size={12} className="text-slate-400" />
                     {visitorCount.toLocaleString()}
                  </div>
                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">{lang === 'ar' ? 'زيارة' : 'Views'}</span>
               </div>
-              
-              <div className="w-px h-6 bg-slate-200/80"></div>
-              
-              {/* Logo Fallback (Stylized Text instead of img since file is missing) */}
-              <div className="flex items-center pb-1">
-                 <span className="text-2xl font-black text-slate-800 tracking-tighter drop-shadow-sm font-serif">قَوَام</span>
-              </div>
            </div>
 
-           {/* Left Side (Action Icons - RTL End) */}
-           <div className="flex items-center gap-1 flex-1 justify-end h-full relative z-10 w-full sm:w-auto">
-              <div className="flex items-center gap-1 bg-slate-50/50 p-1 rounded-xl md:rounded-full border border-slate-100 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
-                 
-                 {/* Language */}
-                 <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-white hover:bg-slate-100 shadow-sm flex items-center justify-center text-slate-600 transition-colors" title={lang === 'ar' ? 'English' : 'العربية'}>
-                    <Globe size={16} />
-                 </button>
+           {/* Mobile Bottom Row / Desktop Sides */}
+           <div className="flex items-center justify-between w-full md:w-full md:contents border-t border-slate-200/60 pt-3 md:border-t-0 md:pt-0 shrink-0">
+              
+              {/* Right Side (User Info & Sessions - RTL Start) */}
+              <div className="flex flex-col text-start justify-center flex-1 h-full px-1">
+                 <span className={`text-[10px] px-2 py-0.5 rounded-full inline-flex items-center w-max font-bold mb-1 ${currentUser.role === 'admin' ? 'text-indigo-600 bg-indigo-50 border border-indigo-100/50' : 'text-slate-600 bg-slate-100 border border-slate-200/50'}`}>
+                   {currentUser.role === 'admin' ? (lang === 'ar' ? 'مدير النظام' : 'System Admin') : (lang === 'ar' ? 'مستخدم' : 'User')}
+                 </span>
+                 <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium whitespace-nowrap pl-1 px-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-blue-400'}`}></span>
+                    {lang === 'ar' ? 'جلسة نشطة' : 'Active Session'}
+                 </div>
+              </div>
 
-                 {/* Wizard */}
-                 <button onClick={() => onGoToWizard?.()} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-white hover:bg-slate-100 shadow-sm flex items-center justify-center text-slate-600 transition-colors hover:text-blue-600" title={lang === 'ar' ? 'العودة للمعالج' : 'Wizard'}>
-                    <Wand2 size={16} />
-                 </button>
-                 
-                 {/* Reset Data */}
-                 <button onClick={onReset} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-white hover:bg-red-50 shadow-sm flex items-center justify-center text-slate-600 hover:text-red-500 transition-colors" title={t.reset}>
-                    <RotateCcw size={16} className="rotate-180" />
-                 </button>
-
-                 <div className="w-px h-5 bg-slate-200 mx-1 hidden sm:block"></div>
-
-                 {/* Admin Tools */}
-                 {currentUser.role === 'admin' && (
-                    <button onClick={onOpenAdmin} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-indigo-50 hover:bg-indigo-100 shadow-sm flex items-center justify-center text-indigo-600 transition-colors border-none" title={lang === 'ar' ? 'إدارة المستخدمين' : 'Users Admin'}>
-                       <Shield size={16} />
+              {/* Left Side (Action Icons - RTL End) */}
+              <div className="flex items-center gap-1 flex-1 justify-end h-full relative z-10 w-full sm:w-auto pr-1 md:pr-0">
+                 <div className="flex items-center gap-1 bg-slate-50/50 p-1 md:p-1 rounded-xl md:rounded-full border border-slate-100 shadow-sm flex-wrap w-full md:w-auto justify-end sm:justify-start overflow-hidden">
+                    
+                    {/* Language */}
+                    <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-white hover:bg-slate-100 shadow-sm flex items-center justify-center text-slate-600 transition-colors" title={lang === 'ar' ? 'English' : 'العربية'}>
+                       <Globe size={16} />
                     </button>
-                 )}
 
-                 {/* Logout */}
-                 <button onClick={onLogout} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-red-50 hover:bg-red-100 shadow-sm flex items-center justify-center text-red-600 transition-colors border-none" title={lang === 'ar' ? 'خروج' : 'Logout'}>
-                    <LogOut size={16} className={lang === 'ar' ? 'mr-0.5' : 'ml-0.5'} />
-                 </button>
+                    {/* Wizard */}
+                    <button onClick={() => onGoToWizard?.()} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-white hover:bg-slate-100 shadow-sm flex items-center justify-center text-slate-600 transition-colors hover:text-blue-600" title={lang === 'ar' ? 'العودة للمعالج' : 'Wizard'}>
+                       <Wand2 size={16} />
+                    </button>
+                    
+                    {/* Reset Data */}
+                    <button onClick={onReset} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-white hover:bg-red-50 shadow-sm flex items-center justify-center text-slate-600 hover:text-red-500 transition-colors" title={t.reset}>
+                       <RotateCcw size={16} className="rotate-180" />
+                    </button>
+
+                    <div className="w-px h-5 bg-slate-200 mx-1 hidden md:block"></div>
+
+                    {/* Admin Tools */}
+                    {currentUser.role === 'admin' && (
+                       <button onClick={onOpenAdmin} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-indigo-50 hover:bg-indigo-100 shadow-sm flex items-center justify-center text-indigo-600 transition-colors border-none" title={lang === 'ar' ? 'إدارة المستخدمين' : 'Users Admin'}>
+                          <Shield size={16} />
+                       </button>
+                    )}
+
+                    {/* Logout */}
+                    <button onClick={onLogout} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg md:rounded-full bg-red-50 hover:bg-red-100 shadow-sm flex items-center justify-center text-red-600 transition-colors border-none" title={lang === 'ar' ? 'خروج' : 'Logout'}>
+                       <LogOut size={16} className={lang === 'ar' ? 'mr-0.5' : 'ml-0.5'} />
+                    </button>
+                 </div>
               </div>
            </div>
         </div>
