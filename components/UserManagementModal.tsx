@@ -164,7 +164,7 @@ create policy "Users can update own profile." on profiles
 drop trigger if exists on_auth_user_created on auth.users;
 drop function if exists public.handle_new_user cascade;
 
-create function public.handle_new_user()
+create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, email, role)
