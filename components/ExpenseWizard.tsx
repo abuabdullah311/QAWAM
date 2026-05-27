@@ -128,54 +128,59 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
           </div>
 
           {!showInput ? (
-            <div className="grid grid-cols-2 gap-5 max-w-xs mx-auto">
+            <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
               <button
                 onClick={() => handleNext(false)}
-                className="flex items-center justify-center gap-2 py-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 font-bold transition-all active:scale-95 shadow-sm hover:shadow"
+                className="flex items-center justify-center gap-2 py-4.5 rounded-[16px] bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-600 font-semibold transition-all active:scale-95 shadow-sm text-[16px]"
               >
-                <X size={24} strokeWidth={1.5} />
+                <X size={20} strokeWidth={1.5} />
                 {lang === 'ar' ? 'لا' : 'No'}
               </button>
               <button
                 onClick={() => handleNext(true)}
-                className="flex items-center justify-center gap-2 py-5 rounded-2xl bg-[#1c1c1e] hover:bg-[#2c2c2e] text-white font-bold shadow-xl shadow-slate-900/10 transition-all hover:-translate-y-1 active:scale-95"
+                className="flex items-center justify-center gap-2 py-4.5 rounded-[16px] bg-[#1c1c1e] hover:bg-black text-white font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all active:scale-95 text-[16px]"
               >
-                <Check size={24} strokeWidth={2.5} />
+                <Check size={20} strokeWidth={1.5} />
                 {lang === 'ar' ? 'نعم' : 'Yes'}
               </button>
             </div>
           ) : (
-            <div className="max-w-sm mx-auto animate-fade-in space-y-5">
-              <label className="block text-center text-sm font-bold text-slate-500 mb-1">
+            <div className="max-w-sm mx-auto animate-fade-in space-y-4">
+              <label className="block text-center text-[13px] font-semibold text-slate-500 mb-2 uppercase tracking-wide">
                 {lang === 'ar' ? 'أدخل المبلغ الشهري' : 'Enter monthly amount'}
               </label>
-              <div className="relative mb-5 bg-slate-50/50 rounded-3xl p-3 border border-slate-100 transition-colors hover:bg-slate-50">
+              <div className="relative mb-5 bg-white/50 backdrop-blur-md rounded-[24px] p-6 border border-slate-200/60 shadow-sm transition-colors focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white group">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={currentAmount}
-                  onChange={(e) => setCurrentAmount(e.target.value)}
+                  onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      setCurrentAmount(val);
+                  }}
                   onKeyDown={(e) => e.key === 'Enter' && confirmAmount()}
                   autoFocus
+                  dir="ltr"
                   placeholder="0"
-                  className="w-full text-4xl sm:text-5xl font-bold bg-transparent outline-none transition-all placeholder-slate-300 text-center tracking-tighter text-slate-900"
+                  className="w-full text-[48px] font-bold bg-transparent outline-none transition-all placeholder-slate-300 text-center tracking-tighter text-slate-900 tabular-nums"
                 />
-                <span className={`absolute top-6 text-slate-400 font-bold text-xl ${isRtl ? 'left-6' : 'right-6'}`}>{t.currency}</span>
+                <span className="absolute bottom-[36px] text-slate-400 font-bold text-lg pointer-events-none end-6">{t.currency}</span>
               </div>
               <button
                 onClick={confirmAmount}
                 disabled={!currentAmount}
-                className={`w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${
+                className={`w-full py-4.5 rounded-[16px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 text-[16px] ${
                   currentAmount 
-                  ? 'bg-[#007AFF] text-white shadow-xl shadow-blue-200 hover:bg-[#005bb5] hover:-translate-y-0.5' 
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  ? 'bg-[#007AFF] text-white shadow-[0_2px_12px_rgba(0,122,255,0.3)] hover:bg-[#0062cc]' 
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'
                 }`}
               >
                 {lang === 'ar' ? 'تأكيد ومتابعة' : 'Confirm & Next'}
-                {isRtl ? <ArrowLeft size={20} strokeWidth={2.5} /> : <ArrowRight size={20} strokeWidth={2.5} />}
+                {isRtl ? <ArrowLeft size={18} strokeWidth={1.5} /> : <ArrowRight size={18} strokeWidth={1.5} />}
               </button>
                <button
                 onClick={() => setShowInput(false)}
-                className="mt-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                className="mt-4 text-[14px] font-semibold text-slate-400 hover:text-slate-600 transition-colors w-full py-2"
               >
                 {lang === 'ar' ? 'تراجع' : 'Cancel'}
               </button>
@@ -190,15 +195,15 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
          
          {!isAddingCustom ? (
             <>
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 transform transition-transform hover:scale-105">
-                    <Plus size={36} strokeWidth={2.5} />
+                <div className="w-20 h-20 bg-slate-100/80 shadow-sm text-[#34C759] rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <Plus size={36} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 mb-4 tracking-tight text-center">
+                <h3 className="text-[24px] font-bold text-slate-900 mb-4 tracking-tight text-center">
                     {lang === 'ar' ? 'هل لديك مصروفات شهرية أخرى؟' : 'Do you have other monthly expenses?'}
                 </h3>
-                <div className="text-slate-500 bg-slate-50/80 p-8 rounded-[2rem] text-sm mb-10 mx-auto max-w-md border border-slate-100 shadow-sm mt-4 text-center">
-                    <p className="font-medium text-lg leading-relaxed text-slate-700">{lang === 'ar' ? 'القائمة شارفت على الانتهاء! إذا كان لديك أي مصروف شهري غير مذكور في القائمة، يمكنك إضافته يدوياً.' : 'If you have any unlisted monthly expense, you can add it manually.'}</p>
-                    <p className="text-sm text-slate-400 mt-6 pt-6 border-t border-slate-200/60 font-medium">
+                <div className="text-slate-500 bg-slate-50/80 p-6 rounded-[24px] text-sm mb-10 mx-auto max-w-md border border-slate-200/50 shadow-sm mt-4 text-center">
+                    <p className="font-medium text-[15px] leading-relaxed text-slate-700">{lang === 'ar' ? 'القائمة شارفت على الانتهاء! إذا كان لديك أي مصروف شهري غير مذكور في القائمة، يمكنك إضافته يدوياً.' : 'If you have any unlisted monthly expense, you can add it manually.'}</p>
+                    <p className="text-[13px] text-slate-400 mt-5 pt-5 border-t border-slate-200/60 font-medium">
                         {lang === 'ar' ? 'يمكنك التعديل أو الحذف لاحقاً.' : 'You can add multiple expenses and edit them later.'}
                     </p>
                 </div>
@@ -206,26 +211,26 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
                 <div className="flex flex-col-reverse sm:flex-row gap-4 max-w-md mx-auto">
                     <button
                         onClick={handleSkipAll}
-                        className="flex-1 py-4 px-6 rounded-2xl bg-white border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all active:scale-95 shadow-sm hover:border-slate-300"
+                        className="flex-1 py-4.5 px-6 rounded-[16px] bg-white border border-slate-200/80 text-slate-600 font-semibold hover:bg-slate-50 transition-all active:scale-95 shadow-sm text-[15px]"
                     >
                         {lang === 'ar' ? 'لا، إنهاء القائمة' : 'No, Finish List'}
                     </button>
                     <button
                         onClick={() => setIsAddingCustom(true)}
-                        className="flex-1 py-4 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-xl shadow-emerald-500/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 active:scale-95"
+                        className="flex-1 py-4.5 px-6 rounded-[16px] bg-[#34C759] hover:bg-[#32b853] text-white font-semibold shadow-[0_4px_16px_rgba(52,199,89,0.2)] transition-all flex items-center justify-center gap-2 active:scale-95 text-[15px]"
                     >
-                        <Plus size={20} strokeWidth={2.5} />
+                        <Plus size={18} strokeWidth={1.5} />
                         {lang === 'ar' ? 'إضافة مصروف آخر' : 'Add another expense'}
                     </button>
                 </div>
             </>
          ) : (
-            <div className="max-w-sm mx-auto animate-fade-in space-y-5">
-                <h3 className="text-xl font-bold text-slate-800 mb-6 tracking-tight">{lang === 'ar' ? 'إضافة مصروف جديد' : 'Add New Expense'}</h3>
+            <div className="max-w-sm mx-auto animate-fade-in space-y-6">
+                <h3 className="text-[20px] font-bold text-slate-900 mb-6 tracking-tight">{lang === 'ar' ? 'إضافة مصروف جديد' : 'Add New Expense'}</h3>
                 
                 <div className="space-y-5">
                     <div className="text-start">
-                        <label className="block text-xs font-bold text-slate-500 mb-2">
+                        <label className="block text-[13px] font-semibold text-slate-500 mb-2 uppercase tracking-wide px-1">
                             {lang === 'ar' ? 'اسم المصروف' : 'Expense Name'}
                         </label>
                         <input
@@ -234,41 +239,46 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
                             onChange={(e) => setCustomName(e.target.value)}
                             placeholder={lang === 'ar' ? 'مثلاً: جيم، نتفليكس...' : 'e.g. Gym, Netflix...'}
                             autoFocus
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all font-bold text-slate-800"
+                            className="w-full px-5 py-4 bg-slate-50 hover:bg-white border border-slate-200/80 rounded-[16px] focus:border-[#007AFF] focus:bg-white focus:ring-4 focus:ring-[#007AFF]/10 outline-none transition-all font-semibold text-slate-900 text-[16px]"
                         />
                     </div>
                     
                     <div className="text-start">
-                        <label className="block text-xs font-bold text-slate-500 mb-2">
+                        <label className="block text-[13px] font-semibold text-slate-500 mb-2 uppercase tracking-wide px-1">
                             {lang === 'ar' ? 'المبلغ الشهري' : 'Monthly Amount'}
                         </label>
-                        <div className="relative">
+                        <div className="relative group">
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
+                                dir="ltr"
                                 value={currentAmount}
-                                onChange={(e) => setCurrentAmount(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9.]/g, '');
+                                    setCurrentAmount(val);
+                                }}
                                 placeholder="0"
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all text-center font-bold text-2xl tracking-tight text-slate-900"
+                                className="w-full px-5 py-4 bg-slate-50 hover:bg-white border border-slate-200/80 rounded-[16px] focus:border-[#007AFF] focus:bg-white focus:ring-4 focus:ring-[#007AFF]/10 outline-none transition-all text-center font-bold text-[28px] tracking-tight tabular-nums text-slate-900"
                                 onKeyDown={(e) => e.key === 'Enter' && confirmAmount()}
                             />
-                             <span className={`absolute top-5 text-slate-400 font-bold ${isRtl ? 'left-5' : 'right-5'}`}>{t.currency}</span>
+                             <span className="absolute top-[22px] text-slate-400 font-bold end-5 text-[16px] pointer-events-none">{t.currency}</span>
                         </div>
                     </div>
 
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex gap-4 pt-6">
                          <button
                             onClick={() => setIsAddingCustom(false)}
-                            className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
+                            className="flex-1 py-4.5 rounded-[16px] border border-slate-200/80 text-slate-600 font-semibold hover:bg-slate-50 active:scale-95 transition-all shadow-sm bg-white text-[15px]"
                         >
                             {t.cancel}
                         </button>
                         <button
                             onClick={confirmAmount}
                             disabled={!currentAmount || !customName}
-                            className={`flex-1 py-4 rounded-2xl font-bold text-white shadow-xl transition-all active:scale-95 ${
+                            className={`flex-1 py-4.5 rounded-[16px] font-semibold text-white shadow-sm transition-all active:scale-95 text-[15px] ${
                                 (!currentAmount || !customName)
-                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                                : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20 hover:-translate-y-0.5'
+                                ? 'bg-slate-100 border border-slate-200/60 text-slate-400 cursor-not-allowed shadow-none'
+                                : 'bg-[#34C759] hover:bg-[#32b853] shadow-[0_4px_16px_rgba(52,199,89,0.2)]'
                             }`}
                         >
                             {t.save}
@@ -281,11 +291,11 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
   );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[500px] w-full max-w-2xl mx-auto animate-fade-in px-4">
+    <div className="flex flex-col items-center justify-center min-h-[500px] w-full max-w-2xl mx-auto animate-fade-in px-2 sm:px-4">
       
       {/* Progress Bar */}
-      <div className="w-full relative mb-10">
-        <div className="w-full h-1.5 bg-slate-200/50 rounded-full overflow-hidden shadow-inner">
+      <div className="w-full relative mb-12">
+        <div className="w-full h-2 bg-slate-200/60 rounded-full overflow-hidden">
           <div 
             className="h-full bg-[#007AFF] transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -294,22 +304,22 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
         
         {/* Skip button moved under progress bar */}
         {!isCustomPhase && (
-          <div className="absolute -bottom-6 w-full flex justify-end">
+          <div className="absolute -bottom-8 w-full flex justify-end">
              <button
                 onClick={handleSkipAll}
-                className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors underline decoration-slate-300 hover:decoration-slate-500 underline-offset-4 active:scale-95"
+                className="text-[13px] font-semibold text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
              >
-                {lang === 'ar' ? 'تخطي الدليل للتسجيل اليدوي' : 'Skip to Manual Entry'}
+                {lang === 'ar' ? 'تخطي للادخال اليدوي' : 'Skip to Manual Entry'} →
              </button>
           </div>
         )}
       </div>
 
-      <div className={`bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-white p-8 md:p-12 w-full relative transition-all duration-300 transform ${isAnimating ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
+      <div className={`bg-white/70 backdrop-blur-3xl rounded-[32px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-6 sm:p-12 w-full relative transition-all duration-300 transform ${isAnimating ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
         
         {/* Item Count Badge (Only in checklist phase) */}
         {!isCustomPhase && (
-            <div className="absolute top-8 left-8 text-xs font-bold text-slate-400 bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-200/50">
+            <div className="absolute top-[28px] end-8 sm:left-8 sm:end-auto text-[12px] font-bold text-slate-400 bg-slate-100/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/60 shadow-sm">
             {currentIndex + 1} / {checklistItems.length}
             </div>
         )}

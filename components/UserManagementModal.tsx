@@ -288,183 +288,189 @@ $$;
   }
 
   return (
-    <div className="fixed inset-0 bg-[#1c1c1e]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-['Almarai',sans-serif]" dir="rtl">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-[#000000]/40 backdrop-blur-md flex items-center justify-center z-50 p-4 sm:p-6" dir="rtl">
+      <div className="bg-white/95 backdrop-blur-3xl w-full max-w-5xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh] overflow-hidden border border-white/20">
         
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-slate-800">إدارة المستخدمين</h2>
-            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-medium">لوحة المشرف</span>
+        <div className="flex justify-between items-center px-8 py-6 border-b border-slate-200/50 bg-white/50 relative">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3">
+              <h2 className="text-[24px] font-bold text-slate-900 tracking-tight">إدارة المستخدمين</h2>
+              <span className="text-[11px] font-bold bg-[#007AFF]/10 text-[#007AFF] px-2.5 py-1 rounded-full uppercase tracking-wider">لوحة المشرف</span>
+            </div>
+            <p className="text-[14px] text-slate-500 font-medium tracking-tight">قم بإدارة أعضاء النظام وصلاحياتهم بثقة.</p>
           </div>
           <div className="flex items-center gap-4">
             <button
               onClick={() => setShowSqlGuide(true)}
-              className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-indigo-100 transition-colors"
+              className="text-[13px] bg-slate-900 text-white px-4 py-2.5 rounded-[12px] flex items-center gap-2 hover:bg-black transition-colors font-semibold shadow-sm active:scale-95"
             >
-              <Database size={14} />
-              إصلاح المزامنة 🛠️
+              <Database size={16} strokeWidth={1.5} />
+              إصلاح المزامنة
             </button>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 p-2 rounded-full hover:bg-slate-100">
-              <X size={20} />
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors bg-black/5 hover:bg-black/10 p-2.5 rounded-full active:scale-95">
+              <X size={20} strokeWidth={2} />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-8 overflow-y-auto flex-1 hide-scrollbar">
           
-          <div className="flex justify-between items-end mb-6">
-            <div>
-              <p className="text-sm text-slate-500">قم بإدارة أعضاء النظام وصلاحياتهم بثقة.</p>
-            </div>
+          <div className="flex justify-end mb-6">
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-[#007AFF] text-white px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium hover:bg-[#005bb5] transition-colors shadow-sm"
+              className="bg-[#007AFF] text-white px-5 py-3 rounded-[16px] flex items-center gap-2 text-[14px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_2px_12px_rgba(0,122,255,0.2)] active:scale-95"
             >
-              <Plus size={16} />
+              <Plus size={18} strokeWidth={2} />
               إضافة عضو جديد
             </button>
           </div>
 
           {/* Add Form */}
           {showAddForm && (
-            <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl mb-6">
-              <h3 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+            <div className="bg-slate-50/50 border border-slate-200/60 p-6 rounded-[24px] mb-8 animate-in fade-in slide-in-from-top-2">
+              <h3 className="text-[15px] font-bold text-slate-800 mb-5 flex items-center gap-2.5">
                 <UserProfileIcon role="admin" />
                 إنشاء حساب جديد
               </h3>
-              <form onSubmit={handleCreateUser} className="flex flex-wrap items-end gap-4">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">البريد الإلكتروني</label>
+              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-4 gap-5 items-end">
+                <div className="flex flex-col gap-1.5 md:col-span-1">
+                  <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
                   <input
                     type="email"
                     required
                     dir="ltr"
                     value={newEmail}
                     onChange={e => setNewEmail(e.target.value)}
-                    className="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                    className="w-full text-[15px] px-4 py-3 bg-white border border-slate-200/80 rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm"
                     placeholder="user@example.com"
                   />
                 </div>
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">كلمة المرور</label>
+                <div className="flex flex-col gap-1.5 md:col-span-1">
+                  <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
                   <input
                     type="password"
                     required
                     dir="ltr"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    className="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                    className="w-full text-[15px] px-4 py-3 bg-white border border-slate-200/80 rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm tracking-widest"
                     placeholder="••••••"
                   />
                 </div>
-                <div className="w-32">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">الصلاحية</label>
+                <div className="flex flex-col gap-1.5 md:col-span-1">
+                  <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">الصلاحية</label>
                   <select
                     value={newRole}
                     onChange={e => setNewRole(e.target.value as UserRole)}
-                    className="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg outline-none bg-white"
+                    className="w-full text-[15px] px-4 py-3 bg-white border border-slate-200/80 rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm appearance-none cursor-pointer"
                   >
-                    <option value="user">مستخدم</option>
-                    <option value="editor">محرر</option>
-                    <option value="admin">مشرف</option>
+                    <option value="user">مستخدم (User)</option>
+                    <option value="editor">محرر (Editor)</option>
+                    <option value="admin">مشرف (Admin)</option>
                   </select>
                 </div>
-                <button
-                  type="submit"
-                  disabled={actionLoading === 'create'}
-                  className="bg-[#2c2c2e] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-900 h-[38px] flex items-center min-w-[80px] justify-center"
-                >
-                  {actionLoading === 'create' ? <Loader2 size={16} className="animate-spin" /> : 'إنشاء'}
-                </button>
+                <div className="md:col-span-1">
+                   <button
+                     type="submit"
+                     disabled={actionLoading === 'create'}
+                     className="w-full bg-[#1c1c1e] text-white px-4 py-3 rounded-[16px] text-[15px] font-semibold hover:bg-black transition-all shadow-sm flex items-center justify-center active:scale-95 disabled:opacity-50"
+                   >
+                     {actionLoading === 'create' ? <Loader2 size={20} className="animate-spin" /> : 'إنشاء'}
+                   </button>
+                </div>
               </form>
             </div>
           )}
 
           {/* Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+          <div className="border border-slate-200/60 rounded-[24px] overflow-hidden bg-white/50 shadow-sm relative">
             {loading ? (
-              <div className="p-10 flex justify-center text-slate-400">
-                <Loader2 size={24} className="animate-spin" />
+              <div className="p-16 flex justify-center text-slate-400">
+                <Loader2 size={28} className="animate-spin" />
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-right">
-                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                <table className="w-full text-[14px] text-start">
+                  <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200/60 text-[12px] uppercase tracking-widest">
                     <tr>
-                      <th className="font-semibold px-4 py-3">البريد الإلكتروني</th>
-                      <th className="font-semibold px-4 py-3">الصلاحية</th>
-                      <th className="font-semibold px-4 py-3">تاريخ الانضمام</th>
-                      <th className="font-semibold px-4 py-3">آخر دخول</th>
-                      <th className="font-semibold px-4 py-3 text-center">الإجراءات</th>
+                      <th className="font-semibold px-6 py-4 text-start">البريد الإلكتروني</th>
+                      <th className="font-semibold px-6 py-4 text-start">الصلاحية</th>
+                      <th className="font-semibold px-6 py-4 text-start">تاريخ الانضمام</th>
+                      <th className="font-semibold px-6 py-4 text-start">آخر دخول</th>
+                      <th className="font-semibold px-6 py-4 text-center">الإجراءات</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     {users.map(user => (
-                      <tr key={user.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-800">
-                          {user.email}
-                          {user.id === currentUser.id && (
-                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-2 align-middle inline-block">أنت</span>
-                          )}
+                      <tr key={user.id} className="hover:bg-black/5 transition-colors group">
+                        <td className="px-6 py-4 font-semibold text-slate-900 text-start">
+                          <div className="flex items-center gap-2">
+                             {user.email}
+                             {user.id === currentUser.id && (
+                               <span className="text-[10px] bg-[#007AFF]/10 text-[#007AFF] px-2 py-0.5 rounded-[6px] font-bold">أنت</span>
+                             )}
+                          </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-4 text-start">
                           <select
                             disabled={user.id === currentUser.id || actionLoading?.startsWith('role_')}
                             value={user.role}
                             onChange={(e) => handleUpdateRole(user.id, e.target.value as UserRole)}
-                            className="text-xs bg-slate-100 border border-slate-200 rounded px-2 py-1 outline-none focus:border-slate-300 disabled:opacity-50"
+                            className="text-[13px] font-medium bg-slate-100/50 border border-slate-200/80 rounded-[8px] px-3 py-1.5 outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/10 disabled:opacity-50 transition-all cursor-pointer"
                           >
-                            <option value="user">مستخدم (User)</option>
-                            <option value="editor">محرر (Editor)</option>
-                            <option value="admin">مشرف (Admin)</option>
+                            <option value="user">مستخدم</option>
+                            <option value="editor">محرر</option>
+                            <option value="admin">مشرف</option>
                           </select>
                         </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs" dir="ltr">
+                        <td className="px-6 py-4 text-slate-500 text-[13px] font-medium text-start" dir="ltr">
                           {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
                         </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs" dir="ltr">
+                        <td className="px-6 py-4 text-slate-500 text-[13px] font-medium text-start" dir="ltr">
                           {user.last_login ? new Date(user.last_login).toLocaleString() : 'لم يدخل بعد'}
                         </td>
-                        <td className="px-4 py-3 flex gap-2 justify-center">
+                        <td className="px-6 py-4 text-center">
+                           <div className="flex justify-center items-center gap-2">
                           {userToChangePassword === user.id ? (
-                            <form onSubmit={(e) => handleChangePassword(e, user.id)} className="flex items-center gap-1">
+                            <form onSubmit={(e) => handleChangePassword(e, user.id)} className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-[12px] border border-slate-200/80">
                               <input
                                 type="password"
                                 required
                                 value={changePasswordValue}
                                 onChange={e => setChangePasswordValue(e.target.value)}
                                 placeholder="جديدة..."
-                                className="w-24 text-xs px-2 py-1 border rounded"
+                                className="w-[100px] text-[13px] px-3 py-1.5 border border-slate-200 rounded-[8px] bg-white outline-none focus:border-[#007AFF]"
                                 dir="ltr"
                               />
-                              <button type="submit" disabled={actionLoading === `pass_${user.id}`} className="text-green-600 bg-green-50 p-1 rounded hover:bg-green-100">
-                                {actionLoading === `pass_${user.id}` ? <Loader2 size={14} className="animate-spin" /> : '✓'}
+                              <button type="submit" disabled={actionLoading === `pass_${user.id}`} className="text-[#34C759] bg-[#34C759]/10 p-1.5 rounded-[8px] hover:bg-[#34C759]/20 transition-all active:scale-95">
+                                {actionLoading === `pass_${user.id}` ? <Loader2 size={16} className="animate-spin" /> : '✓'}
                               </button>
-                              <button type="button" onClick={() => setUserToChangePassword(null)} className="text-slate-400 bg-slate-50 p-1 rounded hover:bg-slate-100">
-                                <X size={14} />
+                              <button type="button" onClick={() => setUserToChangePassword(null)} className="text-slate-400 bg-slate-100 p-1.5 rounded-[8px] hover:bg-slate-200 transition-all active:scale-95">
+                                <X size={16} />
                               </button>
                             </form>
                           ) : (
-                            <>
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => setUserToChangePassword(user.id)}
                                 title="تغيير كلمة المرور"
-                                className="text-slate-400 hover:text-slate-800 transition-colors p-1.5 rounded bg-white border border-transparent hover:border-slate-200"
+                                className="text-slate-600 hover:text-[#007AFF] transition-colors p-2 rounded-full bg-slate-100 hover:bg-[#007AFF]/10 active:scale-95"
                               >
-                                <Key size={14} />
+                                <Key size={16} strokeWidth={1.5} />
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(user.id)}
                                 disabled={user.id === currentUser.id || actionLoading === `delete_${user.id}`}
                                 title="حذف الحساب"
-                                className="text-slate-400 hover:text-red-600 transition-colors p-1.5 rounded bg-white hover:bg-red-50 border border-transparent hover:border-red-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                                className="text-slate-600 hover:text-[#FF3B30] transition-colors p-2 rounded-full bg-slate-100 hover:bg-[#FF3B30]/10 disabled:opacity-30 disabled:hover:text-slate-600 disabled:hover:bg-slate-100 active:scale-95"
                               >
-                                {actionLoading === `delete_${user.id}` ? <Loader2 size={14} className="animate-spin" /> : <UserX size={14} />}
+                                {actionLoading === `delete_${user.id}` ? <Loader2 size={16} className="animate-spin" /> : <UserX size={16} strokeWidth={1.5} />}
                               </button>
-                            </>
+                            </div>
                           )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -473,41 +479,40 @@ $$;
               </div>
             )}
           </div>
-
         </div>
       </div>
 
       {/* SQL Guide Modal */}
       {showSqlGuide && (
-        <div className="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center p-4">
-          <div className="bg-slate-900 w-full max-w-3xl rounded-xl shadow-2xl border border-slate-700 flex flex-col h-[80vh]">
-            <div className="flex justify-between items-center p-4 border-b border-slate-800">
+        <div className="fixed inset-0 bg-[#000000]/60 z-[60] flex items-center justify-center p-4 backdrop-blur-xl">
+          <div className="bg-[#1c1c1e] w-full max-w-3xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/10 flex flex-col h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center px-8 py-6 border-b border-white/5 bg-white/5">
                <div>
-                 <h3 className="text-lg font-bold text-slate-100">أكواد SQL المطلوبة</h3>
-                 <p className="text-xs text-slate-400">انسخ هذه الأكواد وشغلها في SQL Editor الخاص بـ Supabase</p>
+                 <h3 className="text-[20px] font-bold text-white tracking-tight">أكواد SQL المطلوبة</h3>
+                 <p className="text-[13px] text-white/50 mt-1">انسخ هذه الأكواد وشغلها في SQL Editor الخاص بـ Supabase</p>
                </div>
-               <button onClick={() => setShowSqlGuide(false)} className="text-slate-400 hover:text-white p-2">
+               <button onClick={() => setShowSqlGuide(false)} className="text-white/40 hover:text-white p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors active:scale-95">
                  <X size={20} />
                </button>
             </div>
-            <div className="p-4 flex-1 overflow-auto">
-              <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-lg text-sm mb-4 flex items-start gap-2">
-                 <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-400" />
-                 <p>
+            <div className="p-8 flex-1 overflow-auto">
+              <div className="bg-[#FF3B30]/10 border border-[#FF3B30]/20 text-[#FF453A] px-5 py-4 rounded-[16px] text-[14px] mb-6 flex items-start gap-3">
+                 <AlertCircle size={20} className="mt-0.5 shrink-0" strokeWidth={1.5} />
+                 <p className="leading-relaxed">
                    <strong>تنبيه هام!</strong> تأكد من تعطيل خيار "Confirm Email" من إعدادات Authentication في Supabase لكي تتمكن من إنشاء مستخدمين بدون التحقق من البريد.
                  </p>
               </div>
-              <pre className="bg-[#0d1117] p-4 rounded-lg text-[#c9d1d9] text-sm font-mono whitespace-pre-wrap selection:bg-[#264f78]" dir="ltr">
+              <pre className="bg-[#000000] p-6 rounded-[16px] text-white/80 text-[13px] font-mono whitespace-pre-wrap selection:bg-[#007AFF]/40 overflow-x-auto border border-white/5" dir="ltr">
                 {sqlCode}
               </pre>
             </div>
-            <div className="p-4 border-t border-slate-800 bg-slate-900/50 text-left" dir="ltr">
+            <div className="px-8 py-6 border-t border-white/5 bg-white/5 flex justify-start" dir="ltr">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(sqlCode);
                   alert('تم النسخ!');
                 }}
-                className="bg-slate-100 text-slate-900 px-4 py-2 rounded font-medium text-sm hover:bg-white"
+                className="bg-white text-black px-6 py-3 rounded-[16px] font-bold text-[14px] hover:bg-slate-200 transition-colors active:scale-95"
               >
                 نسخ الكود بالكامل
               </button>

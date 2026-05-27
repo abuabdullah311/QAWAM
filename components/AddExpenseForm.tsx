@@ -86,11 +86,11 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
 
         if (lang === 'ar') {
             if (wantsPct > 30 && largestWant) {
-                generatedAdvice = `توصية الخبير: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}%). جرب تقليل بند "${largestWant.name}".`;
+                generatedAdvice = `توصية: إنفاقك على "الرغبات" مرتفع (${Math.round(wantsPct)}%). جرب تقليل بند "${largestWant.name}".`;
             } else if (largestWant) {
-                generatedAdvice = `توصية الخبير: حاول تقليل الكماليات مثل "${largestWant.name}".`;
+                generatedAdvice = `توصية: حاول تقليل الكماليات مثل "${largestWant.name}".`;
             } else {
-                generatedAdvice = `توصية الخبير: ميزانيتك مضغوطة. راجع مصروفاتك.`;
+                generatedAdvice = `توصية: ميزانيتك مضغوطة. راجع المصروفات غير الضرورية.`;
             }
         } else {
             if (wantsPct > 30 && largestWant) {
@@ -144,43 +144,43 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
 
   const getTypeColorClass = (t: ExpenseType) => {
      switch (t) {
-       case ExpenseType.NEED: return 'text-red-700 font-bold';
-       case ExpenseType.WANT: return 'text-amber-600 font-bold';
-       case ExpenseType.SAVING: return 'text-emerald-600 font-bold';
-       default: return 'text-gray-700';
+       case ExpenseType.NEED: return 'text-red-600 font-semibold';
+       case ExpenseType.WANT: return 'text-amber-600 font-semibold';
+       case ExpenseType.SAVING: return 'text-emerald-600 font-semibold';
+       default: return 'text-slate-700 font-semibold';
      }
   };
 
   const isRtl = lang === 'ar';
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="flex justify-between items-center mb-6 pb-2 border-b border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+    <div className="bg-transparent p-5 sm:p-8 w-full max-w-2xl" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+        <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
           {editingExpense ? <Edit2Icon /> : <PlusCircleIcon />}
           {editingExpense ? (lang === 'ar' ? 'تعديل المصروف' : 'Edit Expense') : t.addExpense}
         </h3>
         <button 
           onClick={onCancelEdit}
-          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+          className="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors active:scale-95"
         >
-          <X size={24} />
+          <X size={20} strokeWidth={2} />
         </button>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseName}</label>
+              <label className="block text-[13px] font-semibold text-slate-500 mb-1.5 px-1 uppercase tracking-wider">{t.expenseName}</label>
               
               <select 
                 onChange={handleSuggestionSelect}
-                className="w-full mb-2 px-2 py-1.5 text-xs border border-gray-200 bg-gray-50 rounded text-gray-600 focus:border-blue-500 outline-none cursor-pointer"
+                className="w-full mb-2.5 px-3 py-2.5 text-[14px] font-medium border border-slate-200 bg-slate-50 hover:bg-white rounded-[12px] text-slate-700 focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 outline-none cursor-pointer transition-all appearance-none"
                 defaultValue=""
               >
-                <option value="" disabled>{lang === 'ar' ? "↓ اختر من القائمة المقترحة" : "↓ Select suggested expense"}</option>
+                <option value="" disabled>{lang === 'ar' ? "اختر من القائمة أو اكتب اسماً جديداً..." : "Select suggested or type..."}</option>
                 {currentSuggestions.map((s, i) => (
                   <option key={i} value={s}>{s}</option>
                 ))}
@@ -190,33 +190,37 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder={lang === 'ar' ? "أو اكتب الاسم هنا..." : "Expense name..."}
+                className="w-full px-4 py-3 border border-slate-200 bg-slate-50 hover:bg-white rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all text-[16px] text-slate-900 font-semibold"
+                placeholder={lang === 'ar' ? "أو أدخل اسماً مخصصاً..." : "Enter custom name..."}
                 required
                 autoFocus={!editingExpense}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseAmount}</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="block text-[13px] font-semibold text-slate-500 mb-0.5 px-1 uppercase tracking-wider">{t.expenseAmount}</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
+              dir="ltr"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${lang==='ar' ? 'mt-[29px]' : 'md:mt-[29px]'}`}
+              onChange={(e) => {
+                 const val = e.target.value.replace(/[^0-9.]/g, '');
+                 setAmount(val);
+              }}
+              className={`w-full px-4 py-3 border border-slate-200 bg-slate-50 hover:bg-white rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all text-[16px] text-slate-900 font-bold tabular-nums tracking-tight ${lang==='ar' ? 'mt-0 sm:mt-[38px]' : 'mt-0 md:mt-[38px]'}`}
               placeholder="0.00"
-              min="0"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">{t.expenseType}</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="block text-[13px] font-semibold text-slate-500 mb-0.5 px-1 uppercase tracking-wider">{t.expenseType}</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as ExpenseType)}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white md:mt-[29px] ${getTypeColorClass(type)}`}
+              className={`w-full px-4 py-3 border border-slate-200 bg-slate-50 hover:bg-white rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all text-[15px] appearance-none cursor-pointer ${getTypeColorClass(type)}`}
             >
               {EXPENSE_TYPES.map(t => (
                 <option key={t} value={t} className={getTypeColorClass(t)}>
@@ -226,26 +230,26 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
             </select>
           </div>
 
-          <div>
-             <label className="block text-xs font-semibold text-gray-500 mb-1">{t.notes}</label>
+          <div className="flex flex-col gap-1.5">
+             <label className="block text-[13px] font-semibold text-slate-500 mb-0.5 px-1 uppercase tracking-wider">{t.notes}</label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all md:mt-[29px]"
+              className="w-full px-4 py-3 border border-slate-200 bg-slate-50 hover:bg-white rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all text-[16px] text-slate-900"
               placeholder={lang === 'ar' ? "اختياري" : "Optional"}
             />
           </div>
         </div>
 
         {warning && (
-          <div className="bg-amber-50 border-r-4 border-amber-500 p-4 rounded-md">
-            <div className="flex items-start">
-              <AlertTriangle className="text-amber-500 ltr:mr-2 rtl:ml-2 mt-0.5" size={18} />
+          <div className="bg-amber-50/80 border-[0.5px] border-amber-200 p-4 rounded-[16px] shadow-sm animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} strokeWidth={1.5} />
               <div>
-                <p className="text-sm font-bold text-amber-700">{warning}</p>
-                {advice && <p className="text-sm text-amber-600 mt-1 bg-white/50 p-2 rounded">{advice}</p>}
-                <p className="text-xs text-amber-500 mt-2 font-bold underline cursor-pointer" onClick={handleSubmit}>
+                <p className="text-[14px] font-bold text-amber-800 tracking-tight">{warning}</p>
+                {advice && <p className="text-[13px] text-amber-700/80 mt-1.5 bg-white/60 px-3 py-2 rounded-xl font-medium">{advice}</p>}
+                <p className="text-[12px] text-amber-600 mt-2 font-bold underline cursor-pointer hover:text-amber-700 inline-flex active:scale-95" onClick={handleSubmit}>
                     {lang === 'ar' ? 'حفظ المصروف وتجاهل التنبيه' : 'Save anyway'}
                 </p>
               </div>
@@ -253,19 +257,19 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+        <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={onCancelEdit}
-              className="px-6 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
+              className="px-6 py-3.5 rounded-[16px] font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center gap-2 active:scale-95 text-[15px]"
             >
               {t.cancel}
             </button>
           <button
             type="submit"
-            className="px-6 py-2 rounded-lg bg-[#007AFF] text-white hover:bg-[#005bb5] shadow-md transition-colors flex items-center gap-2"
+            className="px-8 py-3.5 rounded-[16px] font-semibold bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-[0_2px_10px_rgba(0,122,255,0.3)] transition-all flex items-center gap-2 active:scale-[0.98] text-[15px]"
           >
-            {editingExpense ? <Save size={18} /> : <PlusCircle size={18} />}
+            {editingExpense ? <Save size={18} strokeWidth={1.5} /> : <PlusCircle size={18} strokeWidth={1.5} />}
             {editingExpense ? t.save : t.addExpense}
           </button>
         </div>
