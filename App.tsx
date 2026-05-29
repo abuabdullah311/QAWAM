@@ -10,13 +10,11 @@ import { AddExpenseForm } from './components/AddExpenseForm';
 import { PrintableReport } from './components/PrintableReport';
 import { FinancialAdvisor } from './components/FinancialAdvisor';
 import { ExpenseWizard } from './components/ExpenseWizard';
-import { ExtraIncomeActivity } from './components/tools/ExtraIncome';
-import { WhatIfScenarios } from './components/tools/WhatIfScenarios';
-import { DebtPayoff } from './components/tools/DebtPayoff';
-import { SavingsGoal } from './components/tools/SavingsGoal';
+import { FinancialFreedomLab } from './components/FinancialFreedomLab';
+import { SmartGoalPlanner } from './components/SmartGoalPlanner';
 import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule, UserProfile } from './types';
 import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from './constants';
-import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet, Save, RotateCcw, Trash2, Edit2, Sparkles } from 'lucide-react';
+import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet, Save, RotateCcw, Trash2, Edit2, Sparkles, Target, Activity } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -806,51 +804,31 @@ function App() {
         {/* --- STEP 6: TOOLS --- */}
         {step === AppStep.TOOLS && (
           <div className="animate-fade-in pb-20 mt-4 max-w-2xl mx-auto">
-             {activeTool === 'DEBT_PAYOFF' && <DebtPayoff lang={lang} onBack={() => setActiveTool(null)} />}
-             {activeTool === 'EXTRA_INCOME' && <ExtraIncomeActivity salary={salary} lang={lang} onBack={() => setActiveTool(null)} />}
-             {activeTool === 'SAVINGS_GOALS' && <SavingsGoal metrics={metrics} lang={lang} onBack={() => setActiveTool(null)} />}
-             {activeTool === 'WHAT_IF' && <WhatIfScenarios salary={salary} expenses={expenses} metrics={metrics} lang={lang} onBack={() => setActiveTool(null)} />}
+             {activeTool === 'PLANNER' && <SmartGoalPlanner salary={salary} expenses={expenses} metrics={metrics} lang={lang} onBack={() => setActiveTool(null)} />}
+             {activeTool === 'LAB' && <FinancialFreedomLab salary={salary} expenses={expenses} metrics={metrics} lang={lang} onBack={() => setActiveTool(null)} />}
 
              {!activeTool && (
-                 <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 p-6">
-                    <h2 className="text-xl font-bold text-slate-900 mb-6 text-center">
-                       {lang === 'ar' ? 'أدوات مالية مساعدة' : 'Financial Tools'}
+                 <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 p-6 md:p-8">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">
+                       {lang === 'ar' ? 'المخطط الاستراتيجي والأدوات الذكية' : 'Strategic Planner & Tools'}
                     </h2>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                       <button onClick={() => setActiveTool('DEBT_PAYOFF')} className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-[#007AFF]/5 hover:border-[#007AFF]/20 transition-all group">
-                           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 text-[#007AFF] group-hover:scale-110 transition-transform">
-                              <Ban size={24} />
+                       <button onClick={() => setActiveTool('PLANNER')} className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-indigo-500/5 hover:border-indigo-500/20 transition-all group">
+                           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 text-indigo-600 group-hover:scale-110 transition-transform">
+                              <Target size={24} />
                            </div>
                            <span className="font-semibold text-slate-800 text-[14px]">
-                              {lang === 'ar' ? 'التحرر من الديون' : 'Debt Payoff'}
+                              {lang === 'ar' ? 'المخطط المالي الذكي' : 'Smart Goal Planner'}
                            </span>
                        </button>
                        
-                       <button onClick={() => setActiveTool('EXTRA_INCOME')} className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-emerald-500/5 hover:border-emerald-500/20 transition-all group">
-                           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 text-emerald-500 group-hover:scale-110 transition-transform">
-                              <Sparkles size={24} />
+                       <button onClick={() => setActiveTool('LAB')} className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-cyan-500/5 hover:border-cyan-500/20 transition-all group">
+                           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 text-cyan-600 group-hover:scale-110 transition-transform">
+                              <Activity size={24} />
                            </div>
                            <span className="font-semibold text-slate-800 text-[14px]">
-                              {lang === 'ar' ? 'محاكي الدخل الإضافي' : 'Extra Income'}
-                           </span>
-                       </button>
-                       
-                       <button onClick={() => setActiveTool('SAVINGS_GOALS')} className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-amber-500/5 hover:border-amber-500/20 transition-all group">
-                           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 text-amber-500 group-hover:scale-110 transition-transform">
-                              <Wallet size={24} />
-                           </div>
-                           <span className="font-semibold text-slate-800 text-[14px]">
-                              {lang === 'ar' ? 'محاكي أهداف الادخار والاستثمار' : 'Savings Goals'}
-                           </span>
-                       </button>
-                       
-                       <button onClick={() => setActiveTool('WHAT_IF')} className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-purple-500/5 hover:border-purple-500/20 transition-all group">
-                           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 text-purple-500 group-hover:scale-110 transition-transform">
-                              <RotateCcw size={24} />
-                           </div>
-                           <span className="font-semibold text-slate-800 text-[14px]">
-                              {lang === 'ar' ? 'ماذا لو؟' : 'What-If Scenarios'}
+                              {lang === 'ar' ? 'مختبر الحرية المالية' : 'Financial Freedom Lab'}
                            </span>
                        </button>
                     </div>
