@@ -37,6 +37,7 @@ export type UserRole = 'admin' | 'editor' | 'user';
 export interface UserProfile {
   id: string; // auth.uid
   email: string;
+  username?: string;
   role: UserRole;
   created_at?: string;
   last_login?: string;

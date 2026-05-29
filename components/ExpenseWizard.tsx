@@ -105,22 +105,22 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
   const renderChecklistPhase = () => (
     <>
         {/* Question Section */}
-        <div className="text-center mt-2">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 transform transition-transform hover:scale-105">
-            <Wallet size={36} strokeWidth={1.5} />
+        <div className="text-center mt-0 sm:mt-2">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 text-white rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 transform transition-transform hover:scale-105">
+            <Wallet size={36} strokeWidth={1.5} className="w-8 h-8 sm:w-9 sm:h-9" />
           </div>
 
-          <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 mb-2 tracking-tight">
+          <h3 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-800 mb-2 tracking-tight">
             {lang === 'ar' ? 'هل لديك إلتزام شهري لـ:' : 'Do you have a monthly obligation for:'}
-            <span className="text-[#007AFF] block mt-2 font-black text-3xl sm:text-4xl">{currentItem[0]}</span>
+            <span className="text-[#007AFF] block mt-1 sm:mt-2 font-black text-2xl sm:text-4xl">{currentItem[0]}</span>
           </h3>
           
-          <div className="text-slate-500 bg-slate-50/80 p-6 sm:p-8 rounded-[2rem] mb-8 mx-auto max-w-lg border border-slate-100 shadow-sm mt-6">
-             <div className="flex items-center justify-center gap-3 text-base sm:text-lg md:text-xl font-medium text-slate-700 leading-relaxed">
-                <Info size={24} className="shrink-0 text-blue-500 opacity-80" strokeWidth={1.5} />
+          <div className="text-slate-500 bg-slate-50/80 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] mb-6 sm:mb-8 mx-auto max-w-lg border border-slate-100 shadow-sm mt-4 sm:mt-6">
+             <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg md:text-xl font-medium text-slate-700 leading-relaxed">
+                <Info size={20} className="shrink-0 text-blue-500 opacity-80 sm:w-6 sm:h-6" strokeWidth={1.5} />
                 <span>{currentItem[1]}</span>
              </div>
-             <p className="text-xs text-slate-400 mt-5 border-t border-slate-200/50 pt-4 font-medium">
+             <p className="text-[11px] sm:text-xs text-slate-400 mt-4 sm:mt-5 border-t border-slate-200/50 pt-3 sm:pt-4 font-medium">
                {lang === 'ar' 
                 ? "المقصود هو المبالغ التي يتم دفعها بشكل شهري ومنتظم." 
                 : "We mean amounts paid monthly and regularly."}
@@ -291,11 +291,11 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
   );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[500px] w-full max-w-2xl mx-auto animate-fade-in px-2 sm:px-4">
+    <div className="flex flex-col items-center justify-center min-h-[350px] sm:min-h-[450px] w-full max-w-2xl mx-auto animate-fade-in px-1 sm:px-4">
       
       {/* Progress Bar */}
-      <div className="w-full relative mb-12">
-        <div className="w-full h-2 bg-slate-200/60 rounded-full overflow-hidden">
+      <div className="w-full relative mb-6 sm:mb-12">
+        <div className="w-full h-1.5 sm:h-2 bg-slate-200/60 rounded-full overflow-hidden">
           <div 
             className="h-full bg-[#007AFF] transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}

@@ -440,16 +440,16 @@ function App() {
         : `Total expenses (${blockingError.current.toLocaleString()}) exceed net salary (${blockingError.limit.toLocaleString()}).`;
 
       return (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#1c1c1e]/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
-             <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center border-t-4 border-red-500">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
-                   <Ban size={32} />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1c1c1e]/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
+             <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-2xl text-center border-t-4 border-red-500 max-h-[85vh] overflow-y-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-red-600">
+                   <Ban size={24} className="sm:w-8 sm:h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-                <p className="text-gray-600 mb-6 leading-relaxed text-sm">{message}</p>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{title}</h3>
+                <p className="text-gray-600 mb-5 sm:mb-6 leading-relaxed text-[13px] sm:text-sm">{message}</p>
                 <button
                     onClick={() => setBlockingError(null)}
-                    className="w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition-colors shadow-lg"
+                    className="w-full py-2.5 sm:py-3 bg-gray-800 text-white text-[13px] sm:text-sm rounded-xl font-bold hover:bg-gray-900 transition-colors shadow-lg"
                 >
                     {lang === 'ar' ? 'مراجعة المصروفات' : 'Review Expenses'}
                 </button>
@@ -468,22 +468,22 @@ function App() {
       const title = lang === 'ar' ? `تنبيه: ارتفاع ${catName}` : `Warning: High ${catName}`;
       
       return (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
-             <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform scale-100 transition-all">
-                <div className="flex justify-between items-start mb-4">
-                     <div className="flex items-center gap-3">
-                         <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-                            <AlertTriangle size={24} />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
+             <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl transform scale-100 transition-all max-h-[85vh] overflow-y-auto hide-scrollbar">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                     <div className="flex items-center gap-2 sm:gap-3">
+                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 shrink-0">
+                            <AlertTriangle size={20} className="sm:w-6 sm:h-6" />
                         </div>
                         <div className="text-start">
-                             <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-                             <p className="text-xs text-gray-500">{lang === 'ar' ? 'لقد تجاوزت النسبة المقترحة' : 'You exceeded the suggested ratio'}</p>
+                             <h3 className="text-base sm:text-lg font-bold text-gray-800">{title}</h3>
+                             <p className="text-[11px] sm:text-xs text-gray-500">{lang === 'ar' ? 'لقد تجاوزت النسبة المقترحة' : 'You exceeded the suggested ratio'}</p>
                         </div>
                      </div>
-                     <button onClick={() => setWarningState(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                     <button onClick={() => setWarningState(null)} className="text-gray-400 hover:text-gray-600 p-1 bg-gray-50 rounded-full"><X size={18} className="sm:w-5 sm:h-5" /></button>
                 </div>
                 
-                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 text-sm text-gray-700 mb-6 leading-relaxed text-start">
+                <div className="bg-amber-50 p-3 sm:p-4 rounded-xl border border-amber-100 text-[13px] sm:text-sm text-gray-700 mb-4 sm:mb-6 leading-relaxed text-start">
                     {lang === 'ar' ? (
                         <>
                            مجموع مصاريف "{catName}" هو <span className="font-bold">{warningState.current.toLocaleString()}</span>. 
@@ -498,14 +498,14 @@ function App() {
                 </div>
 
                 {warningState.suggestions.length > 0 && (
-                    <div className="mb-6">
-                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-2 text-start">{lang === 'ar' ? 'مقترحات للتخفيض:' : 'Suggestions to reduce:'}</h4>
-                        <div className="space-y-2">
+                    <div className="mb-4 sm:mb-6">
+                        <h4 className="text-[11px] sm:text-xs font-bold text-gray-500 uppercase mb-2 text-start">{lang === 'ar' ? 'مقترحات للتخفيض:' : 'Suggestions to reduce:'}</h4>
+                        <div className="space-y-1.5 sm:space-y-2 max-h-[150px] overflow-y-auto pr-1">
                             {warningState.suggestions.map((s, idx) => (
-                                <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <span className="font-bold text-gray-700 text-sm">{s.name}</span>
-                                    <div className="text-xs text-gray-500">
-                                        {lang === 'ar' ? 'قلل بمقدار' : 'Reduce by'} <span className="font-bold text-emerald-600">{Math.round(s.reduceBy).toLocaleString()}</span>
+                                <div key={idx} className="flex justify-between items-center bg-gray-50 p-2 sm:p-3 rounded-lg border border-gray-100">
+                                    <span className="font-bold text-gray-700 text-[12px] sm:text-sm truncate mr-2">{s.name}</span>
+                                    <div className="text-[11px] sm:text-xs text-gray-500 shrink-0">
+                                        {lang === 'ar' ? 'قلل بمقدار' : 'Reduce by'} <span className="font-bold text-emerald-600 ml-1">{Math.round(s.reduceBy).toLocaleString()}</span>
                                     </div>
                                 </div>
                             ))}
@@ -513,10 +513,10 @@ function App() {
                     </div>
                 )}
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3 flex-col sm:flex-row">
                     <button
                         onClick={() => setWarningState(null)}
-                        className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                        className="w-full py-2.5 sm:py-3 bg-white border border-gray-300 text-gray-700 text-[13px] sm:text-sm rounded-xl font-bold hover:bg-gray-50 transition-colors"
                     >
                         {lang === 'ar' ? 'مراجعة وتعديل' : 'Review & Edit'}
                     </button>
@@ -549,7 +549,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['Almarai',sans-serif] pb-28 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 font-['Almarai',sans-serif] pb-16 sm:pb-20 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
       <StickyHeader 
         salary={salary} 
         metrics={metrics} 
@@ -580,17 +580,17 @@ function App() {
         
         {/* --- STEP 1: SALARY --- */}
         {step === AppStep.SALARY && (
-            <div className="animate-fade-in flex flex-col items-center justify-center min-h-[60vh] px-2">
-                 <div className="bg-white/70 backdrop-blur-3xl rounded-[32px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-8 sm:p-12 w-full max-w-xl text-center relative overflow-hidden transition-all duration-500">
+            <div className="animate-fade-in flex flex-col items-center justify-center min-h-[30vh] sm:min-h-[40vh] px-2 py-4 sm:py-0 mt-4 sm:mt-10">
+                 <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-6 sm:p-10 w-full max-w-xl text-center relative overflow-hidden transition-all duration-500">
                     
-                    <div className="w-20 h-20 bg-slate-100 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-sm">
-                       <Wallet className="text-[#007AFF] relative z-10" size={36} strokeWidth={1.5} />
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-100 rounded-2xl sm:rounded-3xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-sm">
+                       <Wallet className="text-[#007AFF] relative z-10 w-7 h-7 sm:w-8 sm:h-8" strokeWidth={1.5} />
                     </div>
 
-                    <h2 className="text-[28px] font-bold text-slate-900 mb-3 tracking-tight">{t.salaryLabel}</h2>
-                    <p className="text-[15px] font-medium text-slate-500 mb-10">{t.salaryHint}</p>
+                    <h2 className="text-[20px] sm:text-[26px] font-bold text-slate-900 mb-1 sm:mb-2 tracking-tight">{t.salaryLabel}</h2>
+                    <p className="text-[12px] sm:text-[14px] font-medium text-slate-500 mb-6 sm:mb-8">{t.salaryHint}</p>
                     
-                    <div className="relative mb-10 group bg-white/50 backdrop-blur-lg rounded-[24px] p-6 sm:p-8 border border-slate-200/60 transition-colors shadow-sm focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white">
+                    <div className="relative mb-6 sm:mb-8 group bg-white/50 backdrop-blur-lg rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-slate-200/60 transition-colors shadow-sm focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white">
                         <input
                         type="text"
                         inputMode="decimal"
@@ -602,15 +602,15 @@ function App() {
                         placeholder="0"
                         autoFocus
                         dir="ltr"
-                        className="w-full font-bold text-slate-900 bg-transparent outline-none transition-all placeholder-slate-300 text-[56px] sm:text-[72px] tabular-nums text-center tracking-tighter"
+                        className="w-full font-bold text-slate-900 bg-transparent outline-none transition-all placeholder-slate-300 text-[42px] sm:text-[72px] tabular-nums text-center tracking-tighter"
                         />
-                        <span className="absolute text-slate-400 font-bold bottom-[42px] text-xl pointer-events-none end-6 sm:end-8">{t.currency}</span>
+                        <span className="absolute text-slate-400 font-bold bottom-[30px] sm:bottom-[42px] text-lg sm:text-xl pointer-events-none end-4 sm:end-8">{t.currency}</span>
                     </div>
 
                     <button 
                         onClick={handleNextStep}
                         disabled={salary <= 0}
-                        className={`w-full py-4 rounded-2xl font-semibold text-[17px] flex items-center justify-center gap-2 transition-all duration-200 transform active:scale-95 ${salary > 0 ? 'bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'}`}
+                        className={`w-full py-3.5 sm:py-4 rounded-[16px] sm:rounded-2xl font-semibold text-[15px] sm:text-[17px] flex items-center justify-center gap-2 transition-all duration-200 transform active:scale-95 ${salary > 0 ? 'bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'}`}
                     >
                         <span>{t.next}</span>
                         {isRtl ? <ArrowLeft size={20} strokeWidth={1.5} /> : <ArrowRight size={20} strokeWidth={1.5} />}
@@ -653,17 +653,17 @@ function App() {
 
         {/* --- STEP 4: EXPENSES LIST --- */}
         {step === AppStep.EXPENSES && (
-            <div className="animate-fade-in space-y-6">
+            <div className="animate-fade-in space-y-4 sm:space-y-6">
                 
                 {/* Header Action */}
-                <div className="flex flex-col md:flex-row justify-between items-center bg-white/70 backdrop-blur-3xl p-5 sm:p-6 rounded-[24px] shadow-sm border border-slate-200/50 gap-5">
-                    <div className="text-center md:text-start flex flex-col gap-1.5">
-                        <h2 className="text-[24px] font-bold text-slate-900 tracking-tight">{t.step2}</h2>
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 text-[13px] text-slate-500">
-                           <span className="flex items-center gap-1.5 font-medium">{t.expensesTitle} <span className="bg-slate-100 px-2 rounded-full font-bold text-slate-700">{expenses.length}</span></span>
+                <div className="flex flex-col md:flex-row justify-between items-center bg-white/70 backdrop-blur-3xl p-4 sm:p-6 rounded-[16px] sm:rounded-[24px] shadow-sm border border-slate-200/50 gap-3 sm:gap-5">
+                    <div className="text-center md:text-start flex flex-col gap-1 sm:gap-1.5">
+                        <h2 className="text-[20px] sm:text-[24px] font-bold text-slate-900 tracking-tight">{t.step2}</h2>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 mt-1 text-[11px] sm:text-[13px] text-slate-500">
+                           <span className="flex items-center gap-1 sm:gap-1.5 font-medium">{t.expensesTitle} <span className="bg-slate-100 px-1.5 sm:px-2 rounded-full font-bold text-slate-700">{expenses.length}</span></span>
                            <span className="w-1 h-1 rounded-full bg-slate-200 hidden sm:block"></span>
-                           <div className="flex items-center gap-1.5 bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-100">
-                              <Wallet size={14} className="text-slate-400" strokeWidth={1.5} />
+                           <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-50/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-slate-100">
+                              <Wallet size={14} className="text-slate-400 w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={1.5} />
                               <span className="text-slate-500 font-medium">{t.salaryLabel}:</span>
                               <span className="font-bold text-slate-700 tabular-nums">{salary.toLocaleString()}</span>
                               <button 
@@ -748,10 +748,10 @@ function App() {
                     <div className="absolute top-0 end-0 w-64 h-64 bg-gradient-to-br from-[#007AFF]/20 to-purple-500/20 rounded-full blur-[40px] -me-32 -mt-32 transition-transform duration-1000 group-hover:scale-150"></div>
                     <div className="relative z-10 hidden lg:block absolute bottom-0 start-0 w-full h-[60%] bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                     <div className="relative z-20">
-                        <h4 className="text-white/60 text-[13px] font-semibold mb-2 uppercase tracking-widest">{t.savings}</h4>
-                        <div className="text-[56px] sm:text-[72px] font-semibold mb-3 flex items-baseline gap-2 tracking-tighter tabular-nums text-white drop-shadow-sm">
+                        <h4 className="text-white/60 text-[11px] sm:text-[13px] font-semibold mb-1 sm:mb-2 uppercase tracking-widest">{t.savings}</h4>
+                        <div className="text-[42px] sm:text-[56px] md:text-[72px] font-semibold mb-2 sm:mb-3 flex items-baseline gap-1 sm:gap-2 tracking-tighter tabular-nums text-white drop-shadow-sm">
                             {metrics.totalSavingsCalculated.toLocaleString()} 
-                            <span className="text-[24px] sm:text-[28px] font-medium text-white/50">{t.currency}</span>
+                            <span className="text-[18px] sm:text-[24px] md:text-[28px] font-medium text-white/50">{t.currency}</span>
                         </div>
                         
                         {metrics.remainingSalary > 0 && (
@@ -810,18 +810,18 @@ function App() {
       {/* Add Expense Modal */}
       {isModalOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in sm:animate-in sm:zoom-in-95"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in sm:animate-in sm:zoom-in-95"
           onClick={(e) => {
              if (e.target === e.currentTarget) handleCloseModal();
           }}
         >
-          <div className="w-full max-w-2xl bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 overflow-hidden transform-gpu max-h-[90vh] overflow-y-auto hide-scrollbar border-t sm:border border-slate-200/50 space-y-0">
+          <div className="w-full max-w-2xl bg-white rounded-t-[24px] sm:rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 overflow-hidden transform-gpu max-h-[85vh] flex flex-col border-t sm:border border-slate-200/50 space-y-0">
             {/* Modal Drag Handle for Mobile */}
-            <div className="w-full flex justify-center pt-3 pb-1 sm:hidden">
+            <div className="w-full flex justify-center pt-3 pb-1 sm:hidden shrink-0">
               <div className="w-12 h-1.5 bg-slate-200 rounded-full"></div>
             </div>
             
-            <div className="p-2 sm:p-0">
+            <div className="p-2 sm:p-0 overflow-y-auto w-full hide-scrollbar flex-1 pb-safe max-h-full">
               <AddExpenseForm 
                 salary={salary} 
                 currentTotal={metrics.totalExpenses}
@@ -851,7 +851,7 @@ function App() {
              <img 
                src="/ashareef_logo.png" 
                alt="Logo" 
-               className="h-[18px] object-contain" 
+               className="h-7 object-contain" 
                onError={(e) => {
                  (e.target as HTMLImageElement).style.display = 'none';
                }}

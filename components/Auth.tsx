@@ -10,6 +10,7 @@ export function Auth({ onLoginSuccess }: AuthProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -24,6 +25,11 @@ export function Auth({ onLoginSuccess }: AuthProps) {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: username
+          }
+        }
       });
 
       if (signUpError) {
@@ -87,6 +93,25 @@ export function Auth({ onLoginSuccess }: AuthProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {isSignUp && (
+            <div className="space-y-1.5">
+              <label className="block text-[13px] font-semibold text-slate-600 px-1">اسم المستخدم</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 end-0 flex items-center justify-center w-12 pointer-events-none text-slate-400 group-focus-within:text-[#007AFF] transition-colors">
+                  <User size={18} strokeWidth={1.5} />
+                </div>
+                <input
+                  type="text"
+                  required={isSignUp}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-slate-50/50 hover:bg-slate-50 py-3.5 pe-12 ps-4 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm"
+                  placeholder="اسم المستخدم"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="block text-[13px] font-semibold text-slate-600 px-1">البريد الإلكتروني</label>
             <div className="relative group">

@@ -18,6 +18,11 @@ export function UserManagementModal({ onClose, currentUser }: UserManagementModa
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('user');
+  const [newUsername, setNewUsername] = useState('');
+
+  // Editing username
+  const [editingUsernameId, setEditingUsernameId] = useState<string | null>(null);
+  const [editUsernameVal, setEditUsernameVal] = useState('');
 
   // Change password form
   const [userToChangePassword, setUserToChangePassword] = useState<string | null>(null);
@@ -56,12 +61,14 @@ export function UserManagementModal({ onClose, currentUser }: UserManagementModa
         email_param: newEmail,
         password_param: newPassword,
         role_param: newRole,
+        username_param: newUsername || null
       });
 
       if (error) throw error;
       
       setNewEmail('');
       setNewPassword('');
+      setNewUsername('');
       setShowAddForm(false);
       fetchUsers();
     } catch (err: any) {
@@ -85,6 +92,27 @@ export function UserManagementModal({ onClose, currentUser }: UserManagementModa
       setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u));
     } catch (err: any) {
       alert('خطأ في تحديث الصلاحية: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUpdateUsernameAdmin = async (e: React.FormEvent, id: string) => {
+    e.preventDefault();
+    setActionLoading(`user_${id}`);
+    try {
+      const { error } = await supabase.rpc('update_username', {
+        user_id_param: id,
+        new_username: editUsernameVal
+      });
+
+      if (error) throw error;
+      
+      setUsers(users.map(u => u.id === id ? { ...u, username: editUsernameVal } : u));
+      setEditingUsernameId(null);
+      setEditUsernameVal('');
+    } catch (err: any) {
+      alert('خطأ في تحديث اسم المستخدم: ' + err.message);
     } finally {
       setActionLoading(null);
     }
@@ -138,10 +166,14 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade not null primary key,
   email text not null,
+  username text,
   role text not null default 'user' check (role in ('admin', 'editor', 'user')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   last_login timestamp with time zone
 );
+
+-- Add username column if it doesn't exist (for existing tables)
+alter table public.profiles add column if not exists username text;
 
 -- 2. RLS Policies
 alter table public.profiles enable row level security;
@@ -167,8 +199,8 @@ drop function if exists public.handle_new_user cascade;
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, email, role)
-  values (new.id, new.email, 'user');
+  insert into public.profiles (id, email, username, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'username', 'user');
   return new;
 end;
 $$ language plpgsql security definer;
@@ -178,7 +210,7 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- 4. RPC to create user by admin
-create or replace function public.create_user_by_admin(email_param text, password_param text, role_param text)
+create or replace function public.create_user_by_admin(email_param text, password_param text, role_param text, username_param text default null)
 returns uuid
 language plpgsql
 security definer
@@ -198,11 +230,11 @@ begin
   -- Actually, supabase allows admins to use auth.users if security definer is used.
   
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
-  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', email_param, crypt(password_param, gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '')
+  values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', email_param, crypt(password_param, gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', coalesce(jsonb_build_object('username', username_param), '{}'::jsonb), now(), now(), '', '', '', '')
   returning id into new_user_id;
 
-  -- Update role in profile
-  update public.profiles set role = role_param where id = new_user_id;
+  -- Update role and username in profile
+  update public.profiles set role = role_param, username = username_param where id = new_user_id;
   
   return new_user_id;
 end;
@@ -281,6 +313,28 @@ begin
   where id = user_id_param;
 end;
 $$;
+
+-- 9. RPC to update username
+create or replace function public.update_username(user_id_param uuid, new_username text)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  -- Check if caller is the user themselves or an admin
+  if auth.uid() != user_id_param and not exists (select 1 from public.profiles where id = auth.uid() and role = 'admin') then
+    raise exception 'Unauthorized';
+  end if;
+
+  update public.profiles
+  set username = new_username
+  where id = user_id_param;
+  
+  update auth.users 
+  set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('username', new_username) 
+  where id = user_id_param;
+end;
+$$;
 `;
 
   if (currentUser.role !== 'admin') {
@@ -288,96 +342,107 @@ $$;
   }
 
   return (
-    <div className="fixed inset-0 bg-[#000000]/40 backdrop-blur-md flex items-center justify-center z-50 p-4 sm:p-6" dir="rtl">
-      <div className="bg-white/95 backdrop-blur-3xl w-full max-w-5xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh] overflow-hidden border border-white/20">
+    <div className="fixed inset-0 bg-[#000000]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 sm:p-6 pb-20 sm:pb-6" dir="rtl">
+      <div className="bg-white/95 backdrop-blur-3xl w-full max-w-5xl rounded-[24px] sm:rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex flex-col h-full sm:h-auto max-h-[85vh] sm:max-h-[90vh] overflow-hidden border border-white/20">
         
         {/* Header */}
-        <div className="flex justify-between items-center px-8 py-6 border-b border-slate-200/50 bg-white/50 relative">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-3">
-              <h2 className="text-[24px] font-bold text-slate-900 tracking-tight">إدارة المستخدمين</h2>
-              <span className="text-[11px] font-bold bg-[#007AFF]/10 text-[#007AFF] px-2.5 py-1 rounded-full uppercase tracking-wider">لوحة المشرف</span>
+        <div className="flex justify-between items-center px-5 sm:px-8 py-4 sm:py-6 border-b border-slate-200/50 bg-white/50 relative">
+          <div className="flex flex-col gap-1 sm:gap-1.5">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h2 className="text-[20px] sm:text-[24px] font-bold text-slate-900 tracking-tight">إدارة المستخدمين</h2>
+              <span className="text-[10px] sm:text-[11px] font-bold bg-[#007AFF]/10 text-[#007AFF] px-2 sm:px-2.5 py-1 rounded-full uppercase tracking-wider">لوحة المشرف</span>
             </div>
-            <p className="text-[14px] text-slate-500 font-medium tracking-tight">قم بإدارة أعضاء النظام وصلاحياتهم بثقة.</p>
+            <p className="text-[12px] sm:text-[14px] text-slate-500 font-medium tracking-tight">قم بإدارة أعضاء النظام وصلاحياتهم بثقة.</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <button
               onClick={() => setShowSqlGuide(true)}
-              className="text-[13px] bg-slate-900 text-white px-4 py-2.5 rounded-[12px] flex items-center gap-2 hover:bg-black transition-colors font-semibold shadow-sm active:scale-95"
+              className="text-[11px] sm:text-[13px] bg-slate-900 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-[12px] flex items-center gap-1.5 sm:gap-2 hover:bg-black transition-colors font-semibold shadow-sm active:scale-95"
             >
-              <Database size={16} strokeWidth={1.5} />
-              إصلاح المزامنة
+              <Database size={16} strokeWidth={1.5} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">إصلاح المزامنة</span>
+              <span className="sm:hidden">إصلاح</span>
             </button>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors bg-black/5 hover:bg-black/10 p-2.5 rounded-full active:scale-95">
-              <X size={20} strokeWidth={2} />
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors bg-black/5 hover:bg-black/10 p-2 sm:p-2.5 rounded-full active:scale-95">
+              <X size={20} strokeWidth={2} className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-8 overflow-y-auto flex-1 hide-scrollbar">
+        <div className="p-5 sm:p-8 overflow-y-auto flex-1 hide-scrollbar">
           
-          <div className="flex justify-end mb-6">
+          <div className="flex justify-end mb-4 sm:mb-6">
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-[#007AFF] text-white px-5 py-3 rounded-[16px] flex items-center gap-2 text-[14px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_2px_12px_rgba(0,122,255,0.2)] active:scale-95"
+              className="bg-[#007AFF] text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-[12px] sm:rounded-[16px] flex items-center gap-1.5 sm:gap-2 text-[12px] sm:text-[14px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_2px_12px_rgba(0,122,255,0.2)] active:scale-95"
             >
-              <Plus size={18} strokeWidth={2} />
+              <Plus size={18} strokeWidth={2} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
               إضافة عضو جديد
             </button>
           </div>
 
           {/* Add Form */}
           {showAddForm && (
-            <div className="bg-slate-50/50 border border-slate-200/60 p-6 rounded-[24px] mb-8 animate-in fade-in slide-in-from-top-2">
-              <h3 className="text-[15px] font-bold text-slate-800 mb-5 flex items-center gap-2.5">
+            <div className="bg-slate-50/50 border border-slate-200/60 p-4 sm:p-6 rounded-[16px] sm:rounded-[24px] mb-6 sm:mb-8 animate-in fade-in slide-in-from-top-2">
+              <h3 className="text-[14px] sm:text-[15px] font-bold text-slate-800 mb-4 sm:mb-5 flex items-center gap-2">
                 <UserProfileIcon role="admin" />
                 إنشاء حساب جديد
               </h3>
-              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-4 gap-5 items-end">
-                <div className="flex flex-col gap-1.5 md:col-span-1">
-                  <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
+              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-5 items-end">
+                <div className="flex flex-col gap-1 sm:gap-1.5 md:col-span-1">
+                  <label className="text-[11px] sm:text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">اسم المستخدم</label>
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={e => setNewUsername(e.target.value)}
+                    className="w-full text-[13px] sm:text-[15px] px-3 py-2.5 sm:px-4 sm:py-3 bg-white border border-slate-200/80 rounded-[12px] sm:rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm"
+                    placeholder="اسم المستخدم"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 sm:gap-1.5 md:col-span-1">
+                  <label className="text-[11px] sm:text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
                   <input
                     type="email"
                     required
                     dir="ltr"
                     value={newEmail}
                     onChange={e => setNewEmail(e.target.value)}
-                    className="w-full text-[15px] px-4 py-3 bg-white border border-slate-200/80 rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm"
+                    className="w-full text-[13px] sm:text-[15px] px-3 py-2.5 sm:px-4 sm:py-3 bg-white border border-slate-200/80 rounded-[12px] sm:rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm"
                     placeholder="user@example.com"
                   />
                 </div>
-                <div className="flex flex-col gap-1.5 md:col-span-1">
-                  <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
+                <div className="flex flex-col gap-1 sm:gap-1.5 md:col-span-1">
+                  <label className="text-[11px] sm:text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
                   <input
                     type="password"
                     required
                     dir="ltr"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    className="w-full text-[15px] px-4 py-3 bg-white border border-slate-200/80 rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm tracking-widest"
+                    className="w-full text-[13px] sm:text-[15px] px-3 py-2.5 sm:px-4 sm:py-3 bg-white border border-slate-200/80 rounded-[12px] sm:rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm tracking-widest"
                     placeholder="••••••"
                   />
                 </div>
-                <div className="flex flex-col gap-1.5 md:col-span-1">
-                  <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">الصلاحية</label>
+                <div className="flex flex-col gap-1 sm:gap-1.5 md:col-span-1">
+                  <label className="text-[11px] sm:text-[13px] font-semibold text-slate-500 uppercase tracking-wider px-1">الصلاحية</label>
                   <select
                     value={newRole}
                     onChange={e => setNewRole(e.target.value as UserRole)}
-                    className="w-full text-[15px] px-4 py-3 bg-white border border-slate-200/80 rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                    className="w-full text-[13px] sm:text-[15px] px-3 py-2.5 sm:px-4 sm:py-3 bg-white border border-slate-200/80 rounded-[12px] sm:rounded-[16px] focus:ring-4 focus:ring-[#007AFF]/10 focus:border-[#007AFF] outline-none transition-all shadow-sm appearance-none cursor-pointer"
                   >
                     <option value="user">مستخدم (User)</option>
                     <option value="editor">محرر (Editor)</option>
                     <option value="admin">مشرف (Admin)</option>
                   </select>
                 </div>
-                <div className="md:col-span-1">
+                <div className="md:col-span-1 mt-2 sm:mt-0">
                    <button
                      type="submit"
                      disabled={actionLoading === 'create'}
-                     className="w-full bg-[#1c1c1e] text-white px-4 py-3 rounded-[16px] text-[15px] font-semibold hover:bg-black transition-all shadow-sm flex items-center justify-center active:scale-95 disabled:opacity-50"
+                     className="w-full bg-[#1c1c1e] text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-[12px] sm:rounded-[16px] text-[13px] sm:text-[15px] font-semibold hover:bg-black transition-all shadow-sm flex items-center justify-center active:scale-95 disabled:opacity-50"
                    >
-                     {actionLoading === 'create' ? <Loader2 size={20} className="animate-spin" /> : 'إنشاء'}
+                     {actionLoading === 'create' ? <Loader2 size={20} className="animate-spin w-4 h-4 sm:w-5 sm:h-5" /> : 'إنشاء'}
                    </button>
                 </div>
               </form>
@@ -385,27 +450,64 @@ $$;
           )}
 
           {/* Table */}
-          <div className="border border-slate-200/60 rounded-[24px] overflow-hidden bg-white/50 shadow-sm relative">
+          <div className="border border-slate-200/60 rounded-[16px] sm:rounded-[24px] overflow-hidden bg-white/50 shadow-sm relative">
             {loading ? (
-              <div className="p-16 flex justify-center text-slate-400">
-                <Loader2 size={28} className="animate-spin" />
+              <div className="p-8 sm:p-16 flex justify-center text-slate-400">
+                <Loader2 size={28} className="animate-spin w-6 h-6 sm:w-7 sm:h-7" />
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-[14px] text-start">
-                  <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200/60 text-[12px] uppercase tracking-widest">
+                <table className="w-full text-[12px] sm:text-[14px] text-start min-w-[800px]">
+                  <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200/60 text-[11px] sm:text-[12px] uppercase tracking-widest">
                     <tr>
-                      <th className="font-semibold px-6 py-4 text-start">البريد الإلكتروني</th>
-                      <th className="font-semibold px-6 py-4 text-start">الصلاحية</th>
-                      <th className="font-semibold px-6 py-4 text-start">تاريخ الانضمام</th>
-                      <th className="font-semibold px-6 py-4 text-start">آخر دخول</th>
-                      <th className="font-semibold px-6 py-4 text-center">الإجراءات</th>
+                      <th className="font-semibold px-4 sm:px-6 py-3 sm:py-4 text-start">المستخدم</th>
+                      <th className="font-semibold px-4 sm:px-6 py-3 sm:py-4 text-start">البريد الإلكتروني</th>
+                      <th className="font-semibold px-4 sm:px-6 py-3 sm:py-4 text-start">الصلاحية</th>
+                      <th className="font-semibold px-4 sm:px-6 py-3 sm:py-4 text-start">تاريخ الانضمام</th>
+                      <th className="font-semibold px-4 sm:px-6 py-3 sm:py-4 text-start">آخر دخول</th>
+                      <th className="font-semibold px-4 sm:px-6 py-3 sm:py-4 text-center">الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {users.map(user => (
                       <tr key={user.id} className="hover:bg-black/5 transition-colors group">
                         <td className="px-6 py-4 font-semibold text-slate-900 text-start">
+                          <div className="flex items-center gap-2">
+                             {editingUsernameId === user.id ? (
+                               <form onSubmit={(e) => handleUpdateUsernameAdmin(e, user.id)} className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-[12px] border border-slate-200/80">
+                                 <input
+                                   type="text"
+                                   required
+                                   value={editUsernameVal}
+                                   onChange={e => setEditUsernameVal(e.target.value)}
+                                   placeholder="اسم جديد"
+                                   className="w-[100px] text-[13px] px-3 py-1.5 border border-slate-200 rounded-[8px] bg-white outline-none focus:border-[#007AFF]"
+                                 />
+                                 <button type="submit" disabled={actionLoading === `user_${user.id}`} className="text-[#34C759] bg-[#34C759]/10 p-1.5 rounded-[8px] hover:bg-[#34C759]/20 transition-all active:scale-95">
+                                   {actionLoading === `user_${user.id}` ? <Loader2 size={16} className="animate-spin" /> : '✓'}
+                                 </button>
+                                 <button type="button" onClick={() => setEditingUsernameId(null)} className="text-slate-400 bg-slate-100 p-1.5 rounded-[8px] hover:bg-slate-200 transition-all active:scale-95">
+                                   <X size={16} />
+                                 </button>
+                               </form>
+                             ) : (
+                               <>
+                                 <span>{user.username || '-'}</span>
+                                 <button
+                                   onClick={() => {
+                                     setEditingUsernameId(user.id);
+                                     setEditUsernameVal(user.username || '');
+                                   }}
+                                   title="تعديل اسم المستخدم"
+                                   className="text-slate-400 hover:text-[#007AFF] transition-colors p-1 rounded-full opacity-0 group-hover:opacity-100 bg-slate-100 hover:bg-[#007AFF]/10 active:scale-95"
+                                 >
+                                   <Edit2 size={14} strokeWidth={1.5} />
+                                 </button>
+                               </>
+                             )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-slate-700 text-start">
                           <div className="flex items-center gap-2">
                              {user.email}
                              {user.id === currentUser.id && (

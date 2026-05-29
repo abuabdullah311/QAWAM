@@ -36,6 +36,38 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   const t = TRANSLATIONS[lang];
   const savingsPercentage = salary > 0 ? Math.round((metrics.totalSavingsCalculated / salary) * 100) : 0;
   
+  const [isEditingUsername, setIsEditingUsername] = React.useState(false);
+  const [newUsername, setNewUsername] = React.useState(currentUser?.username || '');
+  const [isSavingUsername, setIsSavingUsername] = React.useState(false);
+
+  const handleSaveUsername = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUsername.trim() || newUsername.trim() === currentUser?.username) {
+      setIsEditingUsername(false);
+      return;
+    }
+    setIsSavingUsername(true);
+    try {
+      // Import supabase dynamically or import it at the top. We need it to run the RPC.
+      // Easiest is to fire the RPC directly.
+      const { supabase } = await import('../library/supabaseClient');
+      const { error } = await supabase.rpc('update_username', {
+        user_id_param: currentUser.id,
+        new_username: newUsername.trim()
+      });
+      if (error) throw error;
+      
+      // Ideally we would update the state in App.tsx, but since we rely on the parent state, 
+      // we can just force a reload or pass an onUpdateUser function. 
+      // For simplicity, we just reload the page or optimistically update if we had an onUpdateUser callback.
+      // We don't have an onUpdateUser callback, so we'll just reload the page to refresh session state.
+      window.location.reload();
+    } catch (err: any) {
+      alert('خطأ في تحديث اسم المستخدم: ' + err.message);
+      setIsSavingUsername(false);
+    }
+  };
+
   const steps = [
     { id: AppStep.SALARY, label: t.step1, icon: CreditCard },
     { id: AppStep.WIZARD, label: t.stepWizard, icon: Plus },
@@ -51,20 +83,30 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
         {/* Row 1: Logo & Icons */}
         <div className="flex items-center justify-between w-full h-12">
            {/* Logo */}
-           <div className="flex items-center pb-1 gap-2">
+           <div className="flex items-center pb-1 gap-2 shrink-0">
               <img 
                 src="/logo.png" 
                 alt="Qawam Logo" 
-                className="h-8 w-auto object-contain"
+                className="h-10 w-auto object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }} 
               />
-              <span className="text-2xl font-black text-slate-900 tracking-tighter drop-shadow-sm font-serif">قَوَام</span>
+           </div>
+
+           {/* Visitor Count (Centered) */}
+           <div className="flex-1 flex justify-center px-2">
+               <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50/80 border border-slate-200/60 px-2.5 py-1 rounded-[8px] flex-shrink-0" title={lang === 'ar' ? 'زيارات الموقع' : 'Page Views'}>
+                  <Eye size={14} strokeWidth={2} className="opacity-60 text-[#007AFF]" />
+                  <div className="flex items-baseline gap-1">
+                     <span className="text-[12px] font-bold font-mono tabular-nums tracking-tight text-slate-700">{visitorCount.toLocaleString()}</span>
+                     <span className="text-[10px] opacity-70 font-medium hidden sm:inline">{lang === 'ar' ? 'زيارة' : 'Views'}</span>
+                  </div>
+               </div>
            </div>
 
            {/* Action Icons */}
-           <div className="flex items-center gap-1 flex-wrap justify-end">
+           <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
               {/* Language Toggle */}
               <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="w-9 h-9 shrink-0 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors active:scale-95" title={lang === 'ar' ? 'English' : 'العربية'}>
                  <Globe size={18} strokeWidth={1.5} />
@@ -101,7 +143,31 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
         {/* Row 2: User Info, Session & Visitors */}
         <div className="flex items-center justify-between w-full bg-slate-50/80 border border-slate-200/60 rounded-[14px] px-4 py-2 mt-1 shadow-sm overflow-x-auto hide-scrollbar">
            <div className="flex items-center gap-2.5 text-[12px] font-medium min-w-max">
-              <span className="text-slate-800 font-semibold">{currentUser.email}</span>
+              {isEditingUsername ? (
+                 <form onSubmit={handleSaveUsername} className="flex items-center gap-1.5 bg-white p-1 rounded-[8px] border border-slate-200 shadow-sm">
+                   <input
+                     type="text"
+                     value={newUsername}
+                     onChange={e => setNewUsername(e.target.value)}
+                     className="w-[120px] text-[12px] font-medium px-2 py-1 outline-none rounded-[6px]"
+                     placeholder="اسم المستخدم"
+                     autoFocus
+                   />
+                   <button type="submit" disabled={isSavingUsername} className="text-[#34C759] hover:bg-[#34C759]/10 p-1 rounded-[6px] transition-colors disabled:opacity-50">
+                     {isSavingUsername ? <div className="w-3.5 h-3.5 border-2 border-[#34C759] border-t-transparent rounded-full animate-spin" /> : '✓'}
+                   </button>
+                   <button type="button" onClick={() => { setIsEditingUsername(false); setNewUsername(currentUser?.username || ''); }} className="text-slate-400 hover:bg-slate-100 p-1 rounded-[6px] transition-colors">
+                     ✕
+                   </button>
+                 </form>
+              ) : (
+                 <div className="flex items-center gap-1.5 group">
+                   <span className="text-slate-800 font-semibold">{currentUser.username || currentUser.email}</span>
+                   <button onClick={() => setIsEditingUsername(true)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-[#007AFF] transition-all" title="تعديل اسم المستخدم">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                   </button>
+                 </div>
+              )}
               <span className={`px-2 py-0.5 rounded-[6px] inline-flex items-center w-max font-bold tracking-wide text-[10px] ${currentUser.role === 'admin' ? 'text-[#007AFF] bg-[#007AFF]/10 border border-[#007AFF]/20' : 'text-slate-700 bg-slate-200/50 border border-slate-300/50'}`}>
                 {currentUser.role === 'admin' ? (lang === 'ar' ? 'مدير النظام' : 'System Admin') : (lang === 'ar' ? 'مستخدم' : 'User')}
               </span>
@@ -109,14 +175,6 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
               <div className="flex items-center gap-1.5 text-slate-500 whitespace-nowrap">
                  <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-[#34C759] shadow-[0_0_8px_rgba(52,199,89,0.5)] animate-pulse' : 'bg-slate-300'}`}></span>
                  {lang === 'ar' ? 'جلسة نشطة' : 'Active Session'}
-              </div>
-           </div>
-
-           <div className="flex items-center gap-1.5 text-slate-500 bg-white border border-slate-200/60 px-2.5 py-1 rounded-[8px] shadow-sm shrink-0 ms-4" title={lang === 'ar' ? 'زيارات الموقع' : 'Page Views'}>
-              <Eye size={14} strokeWidth={2} className="opacity-60 text-[#007AFF]" />
-              <div className="flex items-baseline gap-1">
-                 <span className="text-[12px] font-bold font-mono tabular-nums tracking-tight text-slate-700">{visitorCount.toLocaleString()}</span>
-                 <span className="text-[10px] opacity-70 font-medium hidden sm:inline">{lang === 'ar' ? 'زيارة' : 'Views'}</span>
               </div>
            </div>
         </div>
