@@ -318,18 +318,6 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
             style={{ width: `${progress}%` }}
           />
         </div>
-        
-        {/* Skip button moved under progress bar */}
-        {!isCustomPhase && (
-          <div className="absolute -bottom-8 w-full flex justify-end">
-             <button
-                onClick={handleSkipAll}
-                className="text-[13px] font-semibold text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
-             >
-                {lang === 'ar' ? 'تخطي للادخال اليدوي' : 'Skip to Manual Entry'} →
-             </button>
-          </div>
-        )}
       </div>
 
       <div className={`bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-5 sm:p-8 w-full relative transition-all duration-300 transform ${isAnimating ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
@@ -344,6 +332,17 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
         {isCustomPhase ? renderCustomPhase() : renderChecklistPhase()}
 
       </div>
+
+      {!isCustomPhase && (
+         <div className="mt-6 w-full flex justify-center">
+            <button
+               onClick={handleSkipAll}
+               className="text-[14px] font-semibold text-slate-500 hover:text-slate-700 bg-white/50 px-6 py-2.5 rounded-full border border-slate-200/60 transition-colors active:scale-95 shadow-sm"
+            >
+               {lang === 'ar' ? 'تخطي للإدخال اليدوي' : 'Skip to Manual Entry'}
+            </button>
+         </div>
+      )}
     </div>
   );
 };

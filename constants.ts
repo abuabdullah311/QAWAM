@@ -11,7 +11,7 @@ export const EXPENSE_TYPE_LABELS = {
   ar: {
     [ExpenseType.NEED]: 'احتياج',
     [ExpenseType.WANT]: 'رغبة',
-    [ExpenseType.SAVING]: 'ادخار واستثمار'
+    [ExpenseType.SAVING]: 'الادخار والاستثمار'
   },
   en: {
     [ExpenseType.NEED]: 'Needs',
@@ -138,7 +138,7 @@ export const GUIDANCE_TEXT_AR = `
 3. مفاهيم التصنيف:
    • احتياج: مصروف لا يمكن الاستغناء عنه.
    • رغبة: مصروف يمكن تأجيله أو تقليله.
-   • ادخار واستثمار: مبلغ للأمان المالي أو لتنمية المال.
+   • الادخار والاستثمار: مبلغ للأمان المالي أو لتنمية المال.
 4. راقب المؤشرات الرسومية لمقارنة وضعك الحالي مع الوضع المثالي (50/30/20).
 `;
 
@@ -156,7 +156,7 @@ export const TRANSLATIONS = {
   ar: {
     appTitle: "قَوَام",
     step1: "الراتب",
-    stepWizard: "قائمة المصاريف",
+    stepWizard: "الإدخال السريع",
     advisorStep: "تحليل المستشار",
     step2: "المصروفات الحالية",
     step3: "النتائج",
@@ -184,10 +184,10 @@ export const TRANSLATIONS = {
     exporting: "جاري التصدير...",
     needs: "الاحتياجات",
     wants: "الرغبات",
-    savings: "الادخار",
+    savings: "الادخار والاستثمار",
     remaining: "المتبقي",
     totalExpenses: "المصروفات",
-    savingsRate: "معدل الادخار",
+    savingsRate: "معدل الادخار والاستثمار",
     visitors: "مستفيد",
     guidanceTitle: "إرشادات سريعة",
     guidanceText: GUIDANCE_TEXT_AR,

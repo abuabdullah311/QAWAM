@@ -10,9 +10,9 @@ interface FinancialChartProps {
 
 export const FinancialChart: React.FC<FinancialChartProps> = ({ metrics, lang }) => {
   const data = [
-    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED], value: metrics.totalNeeds, color: COLORS[ExpenseType.NEED] },
-    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT], value: metrics.totalWants, color: COLORS[ExpenseType.WANT] },
-    { name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING], value: metrics.totalSavingsCalculated, color: COLORS[ExpenseType.SAVING] },
+    { type: ExpenseType.NEED, name: EXPENSE_TYPE_LABELS[lang][ExpenseType.NEED], value: metrics.totalNeeds, color: COLORS[ExpenseType.NEED] },
+    { type: ExpenseType.WANT, name: EXPENSE_TYPE_LABELS[lang][ExpenseType.WANT], value: metrics.totalWants, color: COLORS[ExpenseType.WANT] },
+    { type: ExpenseType.SAVING, name: EXPENSE_TYPE_LABELS[lang][ExpenseType.SAVING], value: metrics.totalSavingsCalculated, color: COLORS[ExpenseType.SAVING] },
   ].filter(item => item.value > 0);
 
   if (data.length === 0) {
@@ -62,7 +62,7 @@ export const FinancialChart: React.FC<FinancialChartProps> = ({ metrics, lang })
                   textAnchor={x > cx ? 'start' : 'end'}
                   dominantBaseline="central"
                 >
-                  {name}: {value.toLocaleString()}
+                  {value.toLocaleString()}
                 </text>
               );
             }}
@@ -75,7 +75,34 @@ export const FinancialChart: React.FC<FinancialChartProps> = ({ metrics, lang })
             formatter={(value: number) => [`${value.toLocaleString()}`, lang === 'ar' ? 'المبلغ' : 'Amount']}
             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
           />
-          <Legend verticalAlign="bottom" height={36} />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36} 
+            content={(props) => {
+              const { payload } = props;
+              if (!payload) return null;
+              // Enforce order: Needs, Wants, Savings. 
+              // Since it's dir="ltr" on the parent container to fix the tooltip,
+              // we can manually render the legend items in row-reverse or with RTL.
+              const order = [ExpenseType.NEED, ExpenseType.WANT, ExpenseType.SAVING];
+              const orderedPayload = [...payload].sort((a, b) => {
+                 const aIndex = order.indexOf((a.payload as any).type || -1);
+                 const bIndex = order.indexOf((b.payload as any).type || -1);
+                 return aIndex - bIndex;
+              });
+
+              return (
+                <div className="flex justify-center items-center gap-4 mt-2" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                  {orderedPayload.map((entry, index) => (
+                    <div key={`item-${index}`} className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+                      <span className="text-[13px] font-semibold text-slate-700">{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            }} 
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>

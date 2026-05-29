@@ -106,15 +106,28 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
       )}
 
       {/* Brand logo area */}
-      <div className="mb-5 flex flex-col items-center">
+      <div className="mb-6 flex flex-col items-center max-w-[90vw] mx-auto text-center px-4">
          <img 
             src="/logo.png" 
             alt={isRtl ? "شعار قوام" : "Qawam Logo"} 
-            className="h-16 w-auto object-contain mb-1"
+            className="h-16 w-auto object-contain mb-3"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }} 
          />
+         <div className="flex flex-col items-center gap-1 opacity-90 transition-all hover:opacity-100">
+             <div className="text-[#057a55] font-serif text-[22px] md:text-[26px] font-bold leading-relaxed tracking-wider antialiased" dir="rtl">
+                ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
+             </div>
+             {!isRtl && (
+                <div className="text-[#057a55] text-[13px] italic font-serif leading-relaxed mt-1 mb-1 max-w-sm px-2">
+                   "And [they are] those who, when they spend, do so not excessively or sparingly but are ever, between that, [justly] moderate"
+                </div>
+             )}
+             <div className="text-slate-400 text-[10px]">
+                {isRtl ? 'الآية 67، سورة الفرقان' : 'Surah Al-Furqan, Ayah 67'}
+             </div>
+         </div>
       </div>
 
       <div className="max-w-[400px] w-full bg-white/80 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-5 sm:p-6">

@@ -9,7 +9,8 @@ export enum AppStep {
   WIZARD = 2,
   ADVISOR = 3,
   EXPENSES = 4,
-  DASHBOARD = 5
+  DASHBOARD = 5,
+  TOOLS = 6
 }
 
 export type Language = 'ar' | 'en';

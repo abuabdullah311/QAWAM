@@ -1,6 +1,6 @@
 import React from 'react';
 import { DashboardMetrics, AppStep, Language, UserProfile } from '../types';
-import { Users, Globe, LogOut, Sparkles, CreditCard, List, BarChart3, Eye, RotateCcw, Plus } from 'lucide-react';
+import { Users, Globe, LogOut, Sparkles, CreditCard, List, BarChart3, Eye, RotateCcw, Plus, Wrench } from 'lucide-react';
 import { TRANSLATIONS } from '../constants';
 
 interface StickyHeaderProps {
@@ -15,7 +15,6 @@ interface StickyHeaderProps {
   currentUser: UserProfile;
   onLogout: () => void;
   onOpenAdmin: () => void;
-  onGoToWizard?: () => void;
   onStepClick?: (step: AppStep) => void;
 }
 
@@ -31,7 +30,6 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   currentUser,
   onLogout,
   onOpenAdmin,
-  onGoToWizard,
   onStepClick,
   ...props
 }) => {
@@ -71,11 +69,12 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   };
 
   const steps = [
-    { id: AppStep.SALARY, label: t.step1, icon: CreditCard },
-    { id: AppStep.WIZARD, label: t.stepWizard, icon: Plus },
-    { id: AppStep.ADVISOR, label: t.advisorStep, icon: Sparkles },
-    { id: AppStep.EXPENSES, label: t.step2, icon: List },
-    { id: AppStep.DASHBOARD, label: t.step3, icon: BarChart3 },
+    { id: AppStep.SALARY, label: lang === 'ar' ? 'الراتب' : 'Salary', icon: CreditCard },
+    { id: AppStep.WIZARD, label: lang === 'ar' ? 'الخطة' : 'Plan', icon: Plus },
+    { id: AppStep.ADVISOR, label: lang === 'ar' ? 'التحليل' : 'Analysis', icon: Sparkles },
+    { id: AppStep.EXPENSES, label: lang === 'ar' ? 'المصروفات' : 'Expenses', icon: List },
+    { id: AppStep.DASHBOARD, label: lang === 'ar' ? 'النتائج' : 'Results', icon: BarChart3 },
+    { id: AppStep.TOOLS, label: lang === 'ar' ? 'الأدوات' : 'Tools', icon: Wrench },
   ];
 
   return (
@@ -96,31 +95,22 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
               />
            </div>
 
-           {/* Visitor Count (Centered) */}
-           <div className="flex-1 flex justify-center px-2">
-               <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50/80 border border-slate-200/60 px-2.5 py-1 rounded-[8px] flex-shrink-0" title={lang === 'ar' ? 'زيارات الموقع' : 'Page Views'}>
-                  <Eye size={14} strokeWidth={2} className="opacity-60 text-[#007AFF]" />
-                  <div className="flex items-baseline gap-1">
-                     <span className="text-[12px] font-bold font-mono tabular-nums tracking-tight text-slate-700">{visitorCount.toLocaleString()}</span>
-                     <span className="text-[10px] opacity-70 font-medium hidden sm:inline">{lang === 'ar' ? 'زيارة' : 'Views'}</span>
-                  </div>
-               </div>
-           </div>
-
            {/* Action Icons */}
            <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
+              {/* Visitor Count */}
+              <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50/80 border border-slate-200/60 px-2.5 py-1 rounded-[8px] flex-shrink-0" title={lang === 'ar' ? 'زيارات الموقع' : 'Page Views'}>
+                 <Eye size={14} strokeWidth={2} className="opacity-60 text-[#007AFF]" />
+                 <div className="flex items-baseline gap-1">
+                    <span className="text-[12px] font-bold font-mono tabular-nums tracking-tight text-slate-700">{visitorCount.toLocaleString()}</span>
+                    <span className="text-[10px] opacity-70 font-medium hidden sm:inline">{lang === 'ar' ? 'زيارة' : 'Views'}</span>
+                 </div>
+              </div>
+
               {/* Language Toggle */}
               <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="px-3 gap-1.5 h-9 shrink-0 rounded-full hover:bg-slate-100 flex items-center justify-center text-[13px] font-bold text-slate-700 transition-colors active:scale-95 border border-transparent hover:border-slate-200" title={lang === 'ar' ? 'English' : 'العربية'}>
                  <Globe size={16} strokeWidth={1.5} className="opacity-70" />
                  <span className="leading-none pt-[1px] font-sans tracking-wide">{lang === 'ar' ? 'EN' : 'عربي'}</span>
               </button>
-
-              {/* Wizard */}
-              {onGoToWizard && (
-                <button onClick={() => onGoToWizard()} className="w-9 h-9 shrink-0 rounded-full hover:bg-[#007AFF]/10 flex items-center justify-center text-[#007AFF] transition-colors active:scale-95" title={lang === 'ar' ? 'العودة للمعالج' : 'Wizard'}>
-                   <Sparkles size={18} strokeWidth={1.5} />
-                </button>
-              )}
               
               {/* Reset Data */}
               <button onClick={onReset} className="w-9 h-9 shrink-0 rounded-full hover:bg-red-50 flex items-center justify-center text-slate-600 hover:text-red-500 transition-colors active:scale-95" title={t.reset}>
@@ -174,26 +164,25 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
               <span className={`px-2 py-0.5 rounded-[6px] inline-flex items-center w-max font-bold tracking-wide text-[10px] ${currentUser.role === 'admin' ? 'text-[#007AFF] bg-[#007AFF]/10 border border-[#007AFF]/20' : 'text-slate-700 bg-slate-200/50 border border-slate-300/50'}`}>
                 {currentUser.role === 'admin' ? (lang === 'ar' ? 'مدير النظام' : 'System Admin') : (lang === 'ar' ? 'مستخدم' : 'User')}
               </span>
-              <div className="w-[1px] h-3 bg-slate-300"></div>
-              <div className="flex items-center gap-1.5 text-slate-500 whitespace-nowrap">
-                 <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-[#34C759] shadow-[0_0_8px_rgba(52,199,89,0.5)] animate-pulse' : 'bg-slate-300'}`}></span>
-                 {lang === 'ar' ? 'جلسة نشطة' : 'Active Session'}
-              </div>
+           </div>
+           <div className="flex items-center gap-1.5 text-[12px] text-slate-500 font-medium whitespace-nowrap">
+              <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-[#34C759] shadow-[0_0_8px_rgba(52,199,89,0.5)] animate-pulse' : 'bg-slate-300'}`}></span>
+              {lang === 'ar' ? 'جلسة نشطة' : 'Active Session'}
            </div>
         </div>
 
         {/* Bottom Progress Bar: Steps & Metrics */}
-        <div className="relative flex flex-col items-center justify-center w-full">
+        <div className="relative flex flex-col items-center justify-center w-full mt-2">
             {/* Step Progress Container */}
-            <div className="w-full flex justify-center md:justify-center overflow-x-auto pb-1 pt-1 px-1 hide-scrollbar">
-                <div className="flex items-center justify-between md:justify-center w-full max-w-2xl px-2 gap-1 sm:gap-4 relative">
+            <div className="w-full flex justify-center overflow-hidden pb-1 pt-1 px-0 mx-auto max-w-[100%] sm:max-w-2xl">
+                <div className="flex items-start justify-between w-full relative">
                     {/* Background Progress Line */}
-                    <div className="absolute start-10 end-10 top-5 h-[2px] bg-slate-200/50 rounded-full -z-10"></div>
+                    <div className="absolute start-[8%] end-[8%] top-4 h-[2px] bg-slate-200/60 rounded-full -z-10"></div>
                     
                     {/* Active Progress Line */}
                     <div 
-                       className="absolute start-10 top-5 h-[2px] bg-[#007AFF] rounded-full -z-10 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" 
-                       style={{ width: `calc(${(currentStep - 1) / (steps.length - 1)} * (100% - 5rem))` }}
+                       className="absolute start-[8%] top-4 h-[2px] bg-[#007AFF] rounded-full -z-10 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" 
+                       style={{ width: `calc(${(currentStep - 1) / (steps.length - 1)} * 84%)` }}
                     ></div>
 
                     {steps.map((step, idx) => {
@@ -205,21 +194,21 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
                         return (
                         <div 
                            key={step.id} 
-                           className={`flex flex-col items-center relative z-10 ${isClickable ? 'cursor-pointer' : ''}`}
+                           className={`flex flex-col items-center relative z-10 w-[15%] ${isClickable ? 'cursor-pointer' : ''}`}
                            onClick={() => {
                               if (isClickable && onStepClick) onStepClick(step.id);
                            }}
                         >
-                            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
                                 isActive 
                                 ? 'bg-[#007AFF] text-white shadow-[0_2px_10px_rgba(0,122,255,0.3)] scale-[1.05]' 
                                 : isCompleted
                                 ? 'bg-[#007AFF] text-white'
                                 : 'bg-slate-100 text-slate-400 border border-slate-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
                             }`}>
-                                <Icon size={18} strokeWidth={1.5} />
+                                <Icon size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={1.5} />
                             </div>
-                            <span className={`text-[10px] sm:text-[11px] font-semibold mt-2 whitespace-nowrap transition-colors duration-300 ${isActive ? 'text-[#007AFF]' : isCompleted ? 'text-slate-700' : 'text-slate-400'}`}>
+                            <span className={`text-[9px] sm:text-[11px] font-semibold mt-2 text-center leading-tight transition-colors duration-300 ${isActive ? 'text-[#007AFF]' : isCompleted ? 'text-slate-700' : 'text-slate-400'}`}>
                                 {step.label}
                             </span>
                         </div>

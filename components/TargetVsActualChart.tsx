@@ -7,7 +7,7 @@ interface TargetVsActualChartProps {
   salary: number;
   metrics: DashboardMetrics;
   lang: Language;
-  budgetRule: BudgetRule;
+  BUDGET_RULE: BudgetRule;
 }
 
 export const TargetVsActualChart: React.FC<TargetVsActualChartProps> = ({ 
@@ -43,7 +43,7 @@ export const TargetVsActualChart: React.FC<TargetVsActualChartProps> = ({
     },
     {
       type: 'savings',
-      name: lang === 'ar' ? 'الادخار' : 'Savings',
+      name: lang === 'ar' ? 'الادخار والاستثمار' : 'Savings',
       actual: getPercent(metrics.totalSavingsCalculated),
       target: budgetRule.savings,
       colorClass: 'bg-emerald-50 text-emerald-800 border-emerald-100',
