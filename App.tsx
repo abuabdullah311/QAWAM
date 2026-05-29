@@ -12,53 +12,11 @@ import { FinancialAdvisor } from './components/FinancialAdvisor';
 import { ExpenseWizard } from './components/ExpenseWizard';
 import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule, UserProfile } from './types';
 import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from './constants';
-import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet, Save, RotateCcw, Trash2, Edit2 } from 'lucide-react';
+import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet, Save, RotateCcw, Trash2, Edit2, Sparkles } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-// Helper for Analysis Cards
-function AnalysisCard({ title, current, target, color, isMinimum = false, lang }: any) {
-  const t = TRANSLATIONS[lang as Language];
-  const diff = current - target;
-  const isNegative = isMinimum ? diff < -5 : diff > 5; 
-  
-  const colors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-700 border-blue-100',
-    red: 'bg-red-50 text-red-700 border-red-100',
-    amber: 'bg-amber-50 text-amber-700 border-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  };
 
-  return (
-    <div className={`p-4 rounded-xl border ${colors[color]} transition-all hover:shadow-md duration-300`}>
-      <div className="flex justify-between items-start mb-2">
-        <span className="text-sm font-bold">{title}</span>
-        <span className="text-xs bg-white px-2 py-0.5 rounded shadow-sm opacity-80 font-mono font-bold">{Math.round(current)}%</span>
-      </div>
-      <div className="w-full bg-white/50 h-2 rounded-full mb-2 overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all duration-1000 ease-out bg-current shadow-sm`} 
-          style={{ width: `${Math.min(current, 100)}%` }}
-        ></div>
-      </div>
-      {isNegative ? (
-        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
-          <AlertCircle size={12} className="mt-0.5 shrink-0" />
-          <span>
-             {isMinimum 
-               ? `${t.belowTarget} ${Math.abs(Math.round(diff))}%` 
-               : `${t.aboveTarget} ${Math.round(diff)}%`}
-          </span>
-        </div>
-      ) : (
-        <div className="flex items-start gap-1 text-xs mt-1 font-medium opacity-90">
-          <CheckCircle2 size={12} className="mt-0.5 shrink-0" />
-          <span>{t.idealRange}</span>
-        </div>
-      )}
-    </div>
-  );
-}
 
 interface BlockingErrorState {
   type: 'total';
@@ -98,6 +56,9 @@ function App() {
   
   // State for Warnings (Category > Limit) - Non blocking
   const [warningState, setWarningState] = useState<WarningState | null>(null);
+  
+  // State for Category Info Popup after Salary
+  const [showCategoryInfo, setShowCategoryInfo] = useState(false);
   
   const [visitorCount, setVisitorCount] = useState<number>(12050);
   const [isLiveCount, setIsLiveCount] = useState(false);
@@ -219,11 +180,7 @@ function App() {
   // Handlers
   const handleNextStep = () => {
       if (step === AppStep.SALARY && salary > 0) {
-          if (expenses.length > 0) {
-              setStep(AppStep.EXPENSES);
-          } else {
-              setStep(AppStep.WIZARD);
-          }
+          setShowCategoryInfo(true);
       }
       else if (step === AppStep.WIZARD) setStep(AppStep.ADVISOR);
       else if (step === AppStep.ADVISOR) setStep(AppStep.EXPENSES);
@@ -422,38 +379,7 @@ function App() {
     }
   };
 
-  const getAnalysis = () => {
-    if (salary === 0) return null;
-    const needPct = (metrics.totalNeeds / salary) * 100;
-    const wantPct = (metrics.totalWants / salary) * 100;
-    const savePct = (metrics.totalSavingsCalculated / salary) * 100;
 
-    const isBalanced = 
-      Math.abs(needPct - budgetRule.needs) <= 5 && 
-      Math.abs(wantPct - budgetRule.wants) <= 5 && 
-      savePct >= (budgetRule.savings - 5);
-
-    return (
-      <div className="mb-6">
-        {isBalanced && (
-          <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-3 animate-pulse">
-            <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
-              <CheckCircle2 size={24} />
-            </div>
-            <div>
-              <p className="font-bold text-emerald-800">{t.balancedMessage}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <AnalysisCard title={`${t.needs} (${t.target} ${budgetRule.needs}%)`} current={needPct} target={budgetRule.needs} color="red" lang={lang} />
-          <AnalysisCard title={`${t.wants} (${t.target} ${budgetRule.wants}%)`} current={wantPct} target={budgetRule.wants} color="amber" lang={lang} />
-          <AnalysisCard title={`${t.savings} (${t.target} ${budgetRule.savings}%)`} current={savePct} target={budgetRule.savings} color="emerald" isMinimum lang={lang} />
-        </div>
-      </div>
-    );
-  };
 
   const renderBlockingModalContent = () => {
       if (!blockingError) return null;
@@ -557,6 +483,62 @@ function App() {
       );
   };
 
+  const renderCategoryInfoModal = () => {
+    if (!showCategoryInfo) return null;
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
+         <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl transform scale-100 transition-all text-center">
+            <h3 className="text-[20px] font-bold text-slate-900 mb-4 tracking-tight">
+               {lang === 'ar' ? 'تصنيفات المصاريف المعتمدة' : 'Official Expense Categories'}
+            </h3>
+            <p className="text-sm text-slate-600 mb-6 font-medium leading-relaxed">
+               {lang === 'ar' ? 'في منصة قوام، يتم تقسيم مصروفاتك إلى 3 أصناف رئيسية تساعدك على معرفة أين تذهب أموالك:' : 'In Qawam, your expenses are divided into 3 main categories to help you track your money:'}
+            </p>
+            <div className="space-y-3 mb-6 text-start">
+               <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+                  <div className="bg-red-500 rounded-full w-3 h-3 mt-1.5 shrink-0"></div>
+                  <div>
+                    <h4 className="font-bold text-red-700 text-[14px]">{lang === 'ar' ? 'احتياج' : 'Need'}</h4>
+                    <p className="text-[12px] text-red-600 font-medium">
+                      {lang === 'ar' ? 'مصروف أساسي ومهم جداً ولا يمكن تأجيله أو التقليل منه بسهولة (مثل الإيجار، الفواتير الأساسية).' : 'Essential expenses that cannot be deferred or easily reduced (e.g. Rent, Basic bills).'}
+                    </p>
+                  </div>
+               </div>
+               <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                  <div className="bg-amber-500 rounded-full w-3 h-3 mt-1.5 shrink-0"></div>
+                  <div>
+                    <h4 className="font-bold text-amber-700 text-[14px]">{lang === 'ar' ? 'رغبة' : 'Want'}</h4>
+                    <p className="text-[12px] text-amber-600 font-medium">
+                      {lang === 'ar' ? 'مصروف يمكن تأجيله أو التقليل منه أو الاستغناء عنه لزيادة مدخراتك (مثل المطاعم، التسوق، الاشتراكات).' : 'Expenses that can be deferred or reduced to increase savings (e.g. Dining out, Shopping).'}
+                    </p>
+                  </div>
+               </div>
+               <div className="flex items-start gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="bg-emerald-500 rounded-full w-3 h-3 mt-1.5 shrink-0"></div>
+                  <div>
+                    <h4 className="font-bold text-emerald-700 text-[14px]">{lang === 'ar' ? 'ادخار / استثمار' : 'Saving & Investment'}</h4>
+                    <p className="text-[12px] text-emerald-600 font-medium">
+                      {lang === 'ar' ? 'مبالغ تخصصها للمستقبل سواء للطوارئ أو بهدف تنميتها عبر الاستثمار.' : 'Funds allocated for the future, emergencies or investments.'}
+                    </p>
+                  </div>
+               </div>
+            </div>
+            <button
+               onClick={() => {
+                  setShowCategoryInfo(false);
+                  if (expenses.length > 0) setStep(AppStep.EXPENSES);
+                  else setStep(AppStep.WIZARD);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+               }}
+               className="w-full bg-[#007AFF] text-white py-3 rounded-xl font-bold text-[15px] hover:bg-[#0062cc] transition-colors shadow-sm"
+            >
+               {lang === 'ar' ? 'فهمت، لنبدأ' : 'Got it, let\'s start'}
+            </button>
+         </div>
+      </div>
+    );
+  };
+
   if (isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 font-['Almarai',sans-serif]" dir="rtl">
@@ -574,6 +556,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-['Almarai',sans-serif] pb-12 sm:pb-14 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
+      {renderCategoryInfoModal()}
       <StickyHeader 
         salary={salary} 
         metrics={metrics} 
@@ -587,6 +570,15 @@ function App() {
         onLogout={handleLogout}
         onOpenAdmin={() => setShowAdminModal(true)}
         onGoToWizard={() => setStep(AppStep.WIZARD)}
+        onStepClick={(s) => {
+          if (salary > 0) {
+            setStep(s);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (s === AppStep.SALARY) {
+            setStep(s);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }}
       />
 
       {/* Hidden Report for PDF */}
@@ -797,6 +789,10 @@ function App() {
                     <h3 className="font-semibold text-slate-900 mb-4 text-center text-sm tracking-tight">{t.expensesTitle}</h3>
                     <FinancialChart metrics={metrics} lang={lang} />
                  </div>
+              </div>
+              
+              {/* Stats Column */}
+              <div className="lg:col-span-2 flex flex-col gap-6">
                  
                  <div className="bg-white/70 backdrop-blur-3xl p-6 rounded-[24px] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 transition-all hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.1)]">
                     <h3 className="font-semibold text-slate-900 mb-4 text-center text-sm tracking-tight">{t.target} vs {t.actual}</h3>
@@ -807,11 +803,6 @@ function App() {
                         budgetRule={budgetRule}
                     />
                  </div>
-              </div>
-              
-              {/* Stats Column */}
-              <div className="lg:col-span-2 flex flex-col gap-6">
-                 {getAnalysis()}
                  
                  <div className="bg-[#1c1c1e] text-white rounded-[32px] p-8 sm:p-10 shadow-[0_16px_40px_rgba(0,0,0,0.2)] flex flex-col justify-center h-full min-h-[160px] relative overflow-hidden group">
                     <div className="absolute top-0 end-0 w-64 h-64 bg-gradient-to-br from-[#007AFF]/20 to-purple-500/20 rounded-full blur-[40px] -me-32 -mt-32 transition-transform duration-1000 group-hover:scale-150"></div>
@@ -911,25 +902,6 @@ function App() {
                  </div>
               </div>
             </div>
-
-            {/* Expenses Table (Read Only view or quick edit) */}
-            {expenses.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 animate-fade-in mt-6 overflow-hidden">
-                 <div className="p-5 sm:p-6 border-b border-slate-200/60 flex justify-between items-center bg-transparent">
-                   <h3 className="font-semibold text-slate-900 text-[15px]">{t.expensesTitle}</h3>
-                   <button onClick={() => setStep(AppStep.EXPENSES)} className="text-[#007AFF] bg-[#007AFF]/10 hover:bg-[#007AFF]/20 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors active:scale-95">
-                      {t.edit}
-                   </button>
-                 </div>
-                <ExpenseTable 
-                  expenses={expenses} 
-                  salary={salary} 
-                  onDelete={handleDeleteExpense} 
-                  onEdit={handleOpenEditModal}
-                  lang={lang}
-                />
-              </div>
-            )}
           </div>
         )}
 

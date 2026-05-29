@@ -16,6 +16,7 @@ interface StickyHeaderProps {
   onLogout: () => void;
   onOpenAdmin: () => void;
   onGoToWizard?: () => void;
+  onStepClick?: (step: AppStep) => void;
 }
 
 export const StickyHeader: React.FC<StickyHeaderProps> = ({ 
@@ -31,6 +32,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   onLogout,
   onOpenAdmin,
   onGoToWizard,
+  onStepClick,
   ...props
 }) => {
   const t = TRANSLATIONS[lang];
@@ -198,9 +200,16 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
                         const isActive = currentStep === step.id;
                         const isCompleted = currentStep > step.id;
                         const Icon = step.icon;
+                        const isClickable = true; // allow clicking any step as per request
                         
                         return (
-                        <div key={step.id} className="flex flex-col items-center relative z-10">
+                        <div 
+                           key={step.id} 
+                           className={`flex flex-col items-center relative z-10 ${isClickable ? 'cursor-pointer' : ''}`}
+                           onClick={() => {
+                              if (isClickable && onStepClick) onStepClick(step.id);
+                           }}
+                        >
                             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
                                 isActive 
                                 ? 'bg-[#007AFF] text-white shadow-[0_2px_10px_rgba(0,122,255,0.3)] scale-[1.05]' 

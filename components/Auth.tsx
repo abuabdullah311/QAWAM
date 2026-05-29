@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../library/supabaseClient';
-import { Loader2, Globe } from 'lucide-react';
+import { Loader2, Globe, Info, X } from 'lucide-react';
 import { Language } from '../types';
 
 interface AuthProps {
@@ -17,6 +17,7 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const isRtl = lang === 'ar';
 
@@ -81,6 +82,16 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#fbfbfd] p-4 font-['Almarai',-apple-system,BlinkMacSystemFont,sans-serif]" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="absolute top-4 start-4 sm:top-6 sm:start-6 z-50">
+        <button 
+          onClick={() => setShowInfoModal(true)} 
+          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-slate-200/60 shadow-sm rounded-full flex items-center justify-center text-slate-600 hover:bg-white hover:text-slate-900 transition-colors active:scale-95" 
+          title={isRtl ? 'عن المنصة' : 'About Platform'}
+        >
+           <Info size={20} className="opacity-80" strokeWidth={1.5} />
+        </button>
+      </div>
+      
       {setLang && (
         <div className="absolute top-4 end-4 sm:top-6 sm:end-6 z-50">
           <button 
@@ -199,15 +210,47 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
         </div>
       </div>
       
+      {showInfoModal && (
+        <div className="fixed inset-0 bg-[#000000]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 pb-20 sm:pb-4" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="bg-white max-w-sm w-full rounded-[24px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] p-6 relative animate-in fade-in slide-in-from-bottom-4">
+             <button 
+                onClick={() => setShowInfoModal(false)}
+                className={`absolute top-4 ${isRtl ? 'start-4' : 'end-4'} w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors`}
+             >
+                <X size={18} strokeWidth={2} />
+             </button>
+             
+             <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-1">
+                   <Info size={24} strokeWidth={1.5} />
+                </div>
+             </div>
+             
+             <h3 className="text-xl font-bold text-center text-slate-900 mb-2 mt-2">
+               {isRtl ? 'عن منصة قوام' : 'About Qawam'}
+             </h3>
+             <p className="text-[14px] text-slate-600 text-center leading-relaxed mb-6 font-medium">
+               {isRtl ? 'منصة قوام تهدف إلى تقديم تجربة سهلة ومبتكرة لإدارة أموالك ومصاريفك بكفاءة. وتساعدك في التخطيط المالي وتتبع مصروفاتك للوصول إلى استقرار مالي بكل يسر وسهولة.' : 'Qawam platform aims to provide an easy and innovative experience to manage your money and expenses efficiently. It helps you in financial planning and tracking expenses to reach financial stability effortlessly.'}
+             </p>
+             <button
+               onClick={() => setShowInfoModal(false)}
+               className="w-full bg-[#007AFF] text-white py-3 rounded-xl font-semibold hover:bg-[#0062cc] transition-colors"
+             >
+               {isRtl ? 'موافق' : 'Got it'}
+             </button>
+          </div>
+        </div>
+      )}
+
       {/* Footer text */}
-      <footer className="fixed bottom-0 w-full bg-white border-t border-slate-900/5 py-1 px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex flex-col justify-center items-center gap-1 transition-all">
-        <div className="flex items-center gap-2.5 text-[12px] text-slate-500 font-medium bg-transparent px-2 py-1 rounded-full">
+      <footer className="fixed bottom-0 w-full bg-white border-t border-slate-900/5 py-1 px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex justify-center items-center transition-all">
+        <div className="flex items-center gap-2.5 text-[12px] text-slate-500 font-medium bg-transparent px-2 py-0.5 rounded-full my-1">
            <span>{isRtl ? 'تطوير' : 'Developed by'}</span>
            <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="opacity-90 hover:opacity-100 transition-opacity flex items-center">
              <img 
                src="/ashareef_logo.png" 
-               alt="A.Shareef Logo" 
-               className="h-[36px] w-auto inline-block ml-1"
+               alt="Logo" 
+               className="h-10 object-contain ml-1" 
                onError={(e) => {
                  (e.target as HTMLImageElement).style.display = 'none';
                }}

@@ -36,6 +36,36 @@ export const FinancialChart: React.FC<FinancialChartProps> = ({ metrics, lang })
             outerRadius={80}
             paddingAngle={5}
             dataKey="value"
+            labelLine={false}
+            label={({
+              cx,
+              cy,
+              midAngle,
+              innerRadius,
+              outerRadius,
+              percent,
+              value,
+              name,
+              fill
+            }) => {
+              const RADIAN = Math.PI / 180;
+              const radius = outerRadius * 1.35;
+              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+              return (
+                <text
+                  x={x}
+                  y={y}
+                  fill={fill}
+                  className="text-[12px] font-bold"
+                  textAnchor={x > cx ? 'start' : 'end'}
+                  dominantBaseline="central"
+                >
+                  {name}: {value.toLocaleString()}
+                </text>
+              );
+            }}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />

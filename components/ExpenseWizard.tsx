@@ -145,11 +145,28 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
               </button>
             </div>
           ) : (
-            <div className="max-w-sm mx-auto animate-fade-in space-y-4">
-              <label className="block text-center text-[13px] font-semibold text-slate-500 mb-2 uppercase tracking-wide">
+            <div className="max-w-sm mx-auto animate-fade-in space-y-3">
+              <label className="block text-center text-[13px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">
                 {lang === 'ar' ? 'أدخل المبلغ الشهري' : 'Enter monthly amount'}
               </label>
-              <div className="relative mb-5 bg-white/50 backdrop-blur-md rounded-[24px] p-6 border border-slate-200/60 shadow-sm transition-colors focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white group">
+              
+              <div className="flex justify-center items-center gap-2 pb-1">
+                 <span className="text-[12px] text-slate-500 font-medium">{lang === 'ar' ? 'تصنيف المصروف:' : 'Category:'}</span>
+                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                    (isRtl ? EXPENSE_MAPPING[currentItem[0]] : EXPENSE_MAPPING_EN[currentItem[0]]) === ExpenseType.NEED ? 'bg-red-50 text-red-600 border border-red-100' :
+                    (isRtl ? EXPENSE_MAPPING[currentItem[0]] : EXPENSE_MAPPING_EN[currentItem[0]]) === ExpenseType.WANT ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                    'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                 }`}>
+                   {lang === 'ar' ? 
+                     ((EXPENSE_MAPPING[currentItem[0]] === ExpenseType.NEED) ? 'احتياج' : 
+                      (EXPENSE_MAPPING[currentItem[0]] === ExpenseType.WANT) ? 'رغبة' : 'ادخار/استثمار') :
+                     ((EXPENSE_MAPPING_EN[currentItem[0]] === ExpenseType.NEED) ? 'Need' : 
+                      (EXPENSE_MAPPING_EN[currentItem[0]] === ExpenseType.WANT) ? 'Want' : 'Saving/Investment')
+                   }
+                 </span>
+              </div>
+
+              <div className="relative mb-4 bg-white/50 backdrop-blur-md rounded-[16px] p-4 border border-slate-200/60 shadow-sm transition-colors focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white group">
                 <input
                   type="text"
                   inputMode="decimal"
@@ -162,14 +179,14 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
                   autoFocus
                   dir="ltr"
                   placeholder="0"
-                  className="w-full text-[48px] font-bold bg-transparent outline-none transition-all placeholder-slate-300 text-center tracking-tighter text-slate-900 tabular-nums"
+                  className="w-full text-[36px] font-bold bg-transparent outline-none transition-all placeholder-slate-300 text-center tracking-tighter text-slate-900 tabular-nums"
                 />
-                <span className="absolute bottom-[36px] text-slate-400 font-bold text-lg pointer-events-none end-6">{t.currency}</span>
+                <span className="absolute bottom-[24px] text-slate-400 font-bold text-base pointer-events-none end-5">{t.currency}</span>
               </div>
               <button
                 onClick={confirmAmount}
                 disabled={!currentAmount}
-                className={`w-full py-4.5 rounded-[16px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 text-[16px] ${
+                className={`w-full py-4 rounded-[16px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 text-[15px] ${
                   currentAmount 
                   ? 'bg-[#007AFF] text-white shadow-[0_2px_12px_rgba(0,122,255,0.3)] hover:bg-[#0062cc]' 
                   : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'
