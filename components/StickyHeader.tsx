@@ -108,8 +108,9 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
            {/* Action Icons */}
            <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
               {/* Language Toggle */}
-              <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="w-9 h-9 shrink-0 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors active:scale-95" title={lang === 'ar' ? 'English' : 'العربية'}>
-                 <Globe size={18} strokeWidth={1.5} />
+              <button onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} className="px-3 gap-1.5 h-9 shrink-0 rounded-full hover:bg-slate-100 flex items-center justify-center text-[13px] font-bold text-slate-700 transition-colors active:scale-95 border border-transparent hover:border-slate-200" title={lang === 'ar' ? 'English' : 'العربية'}>
+                 <Globe size={16} strokeWidth={1.5} className="opacity-70" />
+                 <span className="leading-none pt-[1px] font-sans tracking-wide">{lang === 'ar' ? 'EN' : 'عربي'}</span>
               </button>
 
               {/* Wizard */}

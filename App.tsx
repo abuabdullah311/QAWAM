@@ -569,7 +569,7 @@ function App() {
   }
 
   if (!currentUser) {
-    return <Auth onLoginSuccess={checkSession} />;
+    return <Auth onLoginSuccess={checkSession} lang={lang} setLang={setLang} />;
   }
 
   return (
