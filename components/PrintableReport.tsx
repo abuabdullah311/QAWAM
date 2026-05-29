@@ -62,6 +62,11 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
              <span className="font-diwani text-emerald-700 text-xl block leading-tight mb-1">
                {isRtl ? '﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾' : 'QAWAM Financial Report'}
              </span>
+             {isRtl && (
+                <span className="text-gray-400 text-[10px] block mt-0.5 font-sans">
+                   سورة الفرقان، الآية 67
+                </span>
+             )}
           </div>
           <div className="w-32 flex justify-end">
              <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded-full">v1.5</span>

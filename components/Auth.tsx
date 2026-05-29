@@ -116,7 +116,7 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
             }} 
          />
          <div className="flex flex-col items-center gap-1 opacity-90 transition-all hover:opacity-100">
-             <div className="text-[#057a55] font-serif text-[22px] md:text-[26px] font-bold leading-relaxed tracking-wider antialiased" dir="rtl">
+             <div className="text-[#057a55] font-diwani text-[22px] md:text-[26px] font-bold leading-relaxed tracking-wider antialiased" dir="rtl">
                 ﴿وَالَّذِينَ إِذَا أَنفَقُوا لَمْ يُسْرِفُوا وَلَمْ يَقْتُرُوا وَكَانَ بَيْنَ ذَٰلِكَ قَوَامًا﴾
              </div>
              {!isRtl && (
@@ -125,7 +125,7 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
                 </div>
              )}
              <div className="text-slate-400 text-[10px]">
-                {isRtl ? 'الآية 67، سورة الفرقان' : 'Surah Al-Furqan, Ayah 67'}
+                {isRtl ? 'سورة الفرقان، الآية 67' : 'Surah Al-Furqan, Ayah 67'}
              </div>
          </div>
       </div>
