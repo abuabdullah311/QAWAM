@@ -24,6 +24,8 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
   
   const [isLoading, setIsLoading] = useState(true);
   const [analysisResult, setAnalysisResult] = useState<{ message: string, rule: BudgetRule | null }>({ message: '', rule: null });
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [customRule, setCustomRule] = useState<BudgetRule>({ needs: 50, wants: 30, savings: 20 });
 
   // Function to calculate rule locally if AI fails (Fallback)
   const performLocalAnalysis = () => {
@@ -55,6 +57,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
           message,
           rule
       });
+      setCustomRule(rule);
       onUpdateRule(rule);
   };
 
@@ -116,6 +119,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
                 message: data.analysis_message,
                 rule: data.recommended_rule
             });
+            setCustomRule(data.recommended_rule);
             onUpdateRule(data.recommended_rule);
         } else {
             throw new Error("Invalid format");
@@ -132,6 +136,41 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
 
     runAnalysis();
   }, [salary, expenses, lang, t.currency]);
+
+  const handleCustomRuleChange = (key: keyof BudgetRule, value: number) => {
+    // Basic logic to ensure total is ALWAYS 100
+    // If one changes, we adjust the others. For simplicity, adjust savings, then wants.
+    // Given the complexity of 3-way sliders, a simple approach is: Wait, native range inputs are independent.
+    // It's better to let user slide, and show total error if != 100, or auto-balance.
+    let newRule = { ...customRule, [key]: value };
+    const total = newRule.needs + newRule.wants + newRule.savings;
+    
+    // Auto-balance logic for a better UX
+    if (total !== 100) {
+      if (key === 'needs') {
+        newRule.savings = 100 - newRule.needs - newRule.wants;
+        if (newRule.savings < 0) {
+          newRule.wants += newRule.savings;
+          newRule.savings = 0;
+        }
+      } else if (key === 'wants') {
+        newRule.savings = 100 - newRule.needs - newRule.wants;
+        if (newRule.savings < 0) {
+          newRule.needs += newRule.savings;
+          newRule.savings = 0;
+        }
+      } else if (key === 'savings') {
+        newRule.wants = 100 - newRule.needs - newRule.savings;
+        if (newRule.wants < 0) {
+          newRule.needs += newRule.wants;
+          newRule.wants = 0;
+        }
+      }
+    }
+    
+    setCustomRule(newRule);
+    onUpdateRule(newRule);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[440px] w-full bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-white p-10 animate-fade-in relative overflow-hidden transition-all duration-500">
@@ -192,6 +231,47 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
                      </div>
                 </div>
             )}
+
+            {/* Custom Rule UI */}
+            <div className="mb-8">
+                <button 
+                   onClick={() => {
+                        setIsCustomizing(!isCustomizing);
+                        onUpdateRule(isCustomizing ? (analysisResult.rule || {needs: 50, wants: 30, savings: 20}) : customRule);
+                   }}
+                   className="text-sm font-semibold text-blue-500 hover:text-blue-600 transition-colors mx-auto block underline decoration-blue-500/30 underline-offset-4"
+                >
+                   {isCustomizing ? (lang === 'ar' ? 'إلغاء التخصيص' : 'Cancel Customization') : (lang === 'ar' ? 'تخصيص الخطة (متقدم)' : 'Customize Plan (Advanced)')}
+                </button>
+                
+                {isCustomizing && (
+                    <div className="mt-6 bg-slate-50 border border-slate-200 rounded-3xl p-6 animate-fade-in shadow-inner text-start space-y-6">
+                        <div className="space-y-2">
+                           <div className="flex justify-between text-sm font-semibold text-slate-700">
+                              <span>{lang === 'ar' ? 'الاحتياجات' : 'Needs'}</span>
+                              <span className="text-rose-500">{customRule.needs}%</span>
+                           </div>
+                           <input type="range" min="0" max="100" value={customRule.needs} onChange={(e) => handleCustomRuleChange('needs', parseInt(e.target.value))} className="w-full accent-rose-500" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                           <div className="flex justify-between text-sm font-semibold text-slate-700">
+                              <span>{lang === 'ar' ? 'الرغبات' : 'Wants'}</span>
+                              <span className="text-amber-500">{customRule.wants}%</span>
+                           </div>
+                           <input type="range" min="0" max="100" value={customRule.wants} onChange={(e) => handleCustomRuleChange('wants', parseInt(e.target.value))} className="w-full accent-amber-500" />
+                        </div>
+
+                        <div className="space-y-2">
+                           <div className="flex justify-between text-sm font-semibold text-slate-700">
+                              <span>{lang === 'ar' ? 'الادخار' : 'Savings'}</span>
+                              <span className="text-emerald-500">{customRule.savings}%</span>
+                           </div>
+                           <input type="range" min="0" max="100" value={customRule.savings} onChange={(e) => handleCustomRuleChange('savings', parseInt(e.target.value))} className="w-full accent-emerald-500" />
+                        </div>
+                    </div>
+                )}
+            </div>
 
             <button 
                 onClick={onFinish}

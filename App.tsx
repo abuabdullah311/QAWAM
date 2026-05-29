@@ -12,7 +12,7 @@ import { FinancialAdvisor } from './components/FinancialAdvisor';
 import { ExpenseWizard } from './components/ExpenseWizard';
 import { Expense, ExpenseType, DashboardMetrics, AppStep, Language, BudgetRule, UserProfile } from './types';
 import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from './constants';
-import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet } from 'lucide-react';
+import { Download, Info, AlertCircle, CheckCircle2, Plus, ArrowRight, ArrowLeft, Send, AlertTriangle, Scale, Ban, Pencil, X, Wallet, Save, RotateCcw, Trash2, Edit2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -87,6 +87,8 @@ function App() {
   const [salary, setSalary] = useState<number>(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgetRule, setBudgetRule] = useState<BudgetRule>({ needs: 50, wants: 30, savings: 20 });
+  const [savedPlans, setSavedPlans] = useState<{name: string, date: string, salary: number, expenses: Expense[], budgetRule: BudgetRule}[]>([]);
+  const [isSavedPlansModalOpen, setIsSavedPlansModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -143,6 +145,13 @@ function App() {
         setCurrentUser({ id: userId, email: '', role: 'admin' });
       } else {
         setCurrentUser(data);
+        
+        // Load data from profile into state
+        if (data.salary) setSalary(Number(data.salary));
+        if (data.expenses) setExpenses(data.expenses);
+        if (data.budget_rule) setBudgetRule(data.budget_rule);
+        if (data.saved_plans) setSavedPlans(data.saved_plans);
+        if (data.current_step) setStep(Number(data.current_step) as AppStep);
       }
     } catch (err) {
       console.error(err);
@@ -155,12 +164,8 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  // Initialize from LocalStorage and Visitor Logic
+  // Data fetching handled by fetchUserProfile now
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('qawam_expenses');
-    const savedSalary = localStorage.getItem('qawam_salary');
-    const savedRule = localStorage.getItem('qawam_rule');
-    
     // Visitor Algorithm
     let globalVisits = parseInt(localStorage.getItem('qawam_total_page_views') || '120', 10);
     
@@ -172,35 +177,24 @@ function App() {
     
     setVisitorCount(globalVisits);
     setIsLiveCount(true);
-
-    if (savedRule) {
-      setBudgetRule(JSON.parse(savedRule));
-    }
-
-    if (savedSalary) {
-      const s = parseFloat(savedSalary);
-      setSalary(s);
-      if (s > 0) {
-          // If expenses exist, go to dashboard
-          if(savedExpenses && JSON.parse(savedExpenses).length > 0) {
-              setStep(AppStep.DASHBOARD);
-          } else {
-              setStep(AppStep.WIZARD);
-          }
-      }
-    }
-    
-    if (savedExpenses) {
-      setExpenses(JSON.parse(savedExpenses));
-    }
   }, []);
 
-  // Save on Change
+  // Save on Change to Supabase
   useEffect(() => {
-    localStorage.setItem('qawam_expenses', JSON.stringify(expenses));
-    localStorage.setItem('qawam_salary', salary.toString());
-    localStorage.setItem('qawam_rule', JSON.stringify(budgetRule));
-  }, [expenses, salary, budgetRule]);
+    if (!currentUser) return;
+
+    const timeoutId = setTimeout(async () => {
+      await supabase.from('profiles').update({
+        salary: salary,
+        expenses: expenses,
+        budget_rule: budgetRule,
+        saved_plans: savedPlans,
+        current_step: step
+      }).eq('id', currentUser.id);
+    }, 1500);
+
+    return () => clearTimeout(timeoutId);
+  }, [expenses, salary, budgetRule, savedPlans, step, currentUser]);
 
   // Calculations
   const metrics: DashboardMetrics = React.useMemo(() => {
@@ -350,9 +344,6 @@ function App() {
 
   const handleReset = () => {
     if (window.confirm(lang === 'ar' ? 'هل أنت متأكد من حذف البيانات؟' : 'Are you sure you want to reset data?')) {
-      localStorage.removeItem('qawam_expenses');
-      localStorage.removeItem('qawam_salary');
-      localStorage.removeItem('qawam_rule');
       setSalary(0);
       setExpenses([]);
       setBudgetRule({ needs: 50, wants: 30, savings: 20 });
@@ -360,6 +351,39 @@ function App() {
       setStep(AppStep.SALARY);
       window.scrollTo(0, 0);
     }
+  };
+
+  const handleSaveCurrentPlan = () => {
+      const now = new Date();
+      const monthNamesAr = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+      const dateStr = lang === 'ar' ? `${monthNamesAr[now.getMonth()]} ${now.getFullYear()}` : `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
+      
+      const newPlan = {
+          name: lang === 'ar' ? `خطة ${dateStr}` : `Plan ${dateStr}`,
+          date: new Date().toISOString(),
+          salary,
+          expenses,
+          budgetRule
+      };
+      
+      const updatedPlans = [newPlan, ...savedPlans];
+      setSavedPlans(updatedPlans);
+      
+      alert(lang === 'ar' ? 'تم حفظ الخطة بنجاح في أرشيفك!' : 'Plan saved successfully to your archive!');
+  };
+
+  const handleLoadPlan = (plan: any) => {
+      setSalary(plan.salary);
+      setExpenses(plan.expenses);
+      setBudgetRule(plan.budgetRule || { needs: 50, wants: 30, savings: 20 });
+      setIsSavedPlansModalOpen(false);
+      setStep(AppStep.DASHBOARD);
+  };
+
+  const handleDeletePlan = (index: number) => {
+      const updated = [...savedPlans];
+      updated.splice(index, 1);
+      setSavedPlans(updated);
   };
 
   const exportPDF = async () => {
@@ -625,6 +649,16 @@ function App() {
                           {lang === 'ar' ? 'تخطي الدليل وإدخال المصاريف يدوياً' : 'Skip Wizard & Enter Manually'}
                         </button>
                     )}
+
+                    {savedPlans.length > 0 && (
+                        <button
+                           onClick={() => setIsSavedPlansModalOpen(true)}
+                           className="w-full bg-[#1c1c1e] text-white font-semibold flex items-center justify-center gap-2 py-4 mt-4 rounded-2xl shadow-sm text-[15px] sm:text-[16px] transition-all hover:bg-black active:scale-95"
+                        >
+                           <RotateCcw size={18} />
+                           {lang === 'ar' ? 'سجلات الخطط السابقة' : 'Previous Saved Plans'}
+                        </button>
+                    )}
                  </div>
             </div>
         )}
@@ -684,6 +718,41 @@ function App() {
                         {t.addExpense}
                     </button>
                 </div>
+
+                {/* Intelligent Warning System based on Custom Rule (Feature 5) */}
+                {(() => {
+                   const needsRatio = (metrics.totalNeeds / salary) * 100;
+                   const wantsRatio = (metrics.totalWants / salary) * 100;
+                   if (needsRatio > budgetRule.needs && wantsRatio > budgetRule.wants) {
+                       return (
+                           <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl flex gap-3 text-rose-700 animate-fade-in shadow-sm">
+                              <AlertTriangle className="shrink-0 mt-0.5" size={18} />
+                              <div className="text-[13px] font-medium leading-relaxed">
+                                {lang === 'ar' ? `تنبيه: لقد تجاوزت الحد المخصص للاحتياجات (${budgetRule.needs}%) والرغبات (${budgetRule.wants}%). قد يؤثر هذا على مدخراتك.` : `Warning: You exceeded the limit for both Needs (${budgetRule.needs}%) and Wants (${budgetRule.wants}%), impacting your savings.`}
+                              </div>
+                           </div>
+                       )
+                   } else if (needsRatio > budgetRule.needs) {
+                       return (
+                           <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3 text-amber-700 animate-fade-in shadow-sm">
+                              <AlertCircle className="shrink-0 mt-0.5" size={18} />
+                              <div className="text-[13px] font-medium leading-relaxed">
+                                {lang === 'ar' ? `تجاوز للاحتياجات: مصاريف الأساسيات أصبحت أكبر من القاعدة المحددة لك (${budgetRule.needs}%). راجع القائمة إن أمكن.` : `Needs Exceeded: Basic expenses are larger than your set rule (${budgetRule.needs}%). Review if possible.`}
+                              </div>
+                           </div>
+                       )
+                   } else if (wantsRatio > budgetRule.wants) {
+                       return (
+                           <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex gap-3 text-blue-700 animate-fade-in shadow-sm">
+                              <Info className="shrink-0 mt-0.5" size={18} />
+                              <div className="text-[13px] font-medium leading-relaxed">
+                                {lang === 'ar' ? `إنذار مبكر: الإنفاق على الرغبات أعلى من النسبة المحددة (${budgetRule.wants}%). احرص على عدم المساس بنسبة الادخار.` : `Early Alert: Spending on Wants is higher than the set ${budgetRule.wants}%. Ensure savings are not affected.`}
+                              </div>
+                           </div>
+                       )
+                   }
+                   return null;
+                })()}
 
                 {/* The List */}
                 <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 min-h-[300px] overflow-hidden">
@@ -762,24 +831,83 @@ function App() {
                         )}
                     </div>
                  </div>
+                 
+                 {/* Feature 4: Extra Income Simulator */}
+                 <div className="bg-white/70 backdrop-blur-3xl p-6 rounded-[24px] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 transition-all hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.1)]">
+                    <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2 text-[15px]">
+                       <Sparkles className="text-amber-500" size={18} />
+                       {lang === 'ar' ? 'محاكي الدخل الإضافي' : 'Extra Income Simulator'}
+                    </h3>
+                    <p className="text-[12px] text-slate-500 mb-4 leading-relaxed">
+                       {lang === 'ar' 
+                         ? 'اكتشف كيف ستتأثر مدخراتك ورغباتك لو زاد دخلك الشهري (مثلاً عبر مصدر دخل إضافي أو ترقية).' 
+                         : 'Discover how your savings and lifestyle improve if you increase your monthly income.'}
+                    </p>
+                    
+                    <div className="space-y-4 pt-2">
+                       <input 
+                         type="range" 
+                         min="0" 
+                         max={Math.max(10000, salary)} 
+                         step="500"
+                         defaultValue="0" 
+                         onChange={(e) => {
+                            const extra = parseInt(e.target.value);
+                            const elExtra = document.getElementById('sim-extra-income');
+                            const elSavings = document.getElementById('sim-extra-savings');
+                            if (elExtra && elSavings) {
+                               elExtra.innerText = `+${extra.toLocaleString()}`;
+                               // If you get extra, assuming essential needs are covered, the extra goes largely to Savings (e.g. 70%) and Wants (30%).
+                               // Using rule logic: Needs don't typically grow, so distribute based on rule ratio between wants and savings
+                               const totalWS = budgetRule.wants + budgetRule.savings;
+                               const savingShare = totalWS > 0 ? (budgetRule.savings / totalWS) : 1;
+                               elSavings.innerText = `+${Math.round(extra * savingShare).toLocaleString()}`;
+                            }
+                         }}
+                         className="w-full accent-amber-500" 
+                       />
+                       
+                       <div className="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl p-3">
+                          <div className="text-center">
+                             <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase mb-1">{lang === 'ar' ? 'الدخل الإضافي' : 'Extra Income'}</div>
+                             <div id="sim-extra-income" className="font-mono font-bold text-slate-700 text-[14px] sm:text-[16px]">+0</div>
+                          </div>
+                          <ArrowRight className={`text-slate-300 ${isRtl ? 'rotate-180' : ''}`} size={16} />
+                          <div className="text-center">
+                             <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase mb-1">{lang === 'ar' ? 'زيادة المدخرات' : 'Extra Savings'}</div>
+                             <div id="sim-extra-savings" className="font-mono font-bold text-emerald-500 text-[14px] sm:text-[16px]">+0</div>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
 
-                 <div className="flex flex-col sm:flex-row gap-4">
+                 <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
                      <button 
-                        onClick={handlePrevStep}
-                        className="flex-1 bg-white border border-slate-200/80 text-slate-700 py-4.5 rounded-[16px] font-semibold hover:bg-slate-50 flex justify-center items-center gap-2 transition-all shadow-sm active:scale-95 text-[15px]"
+                        onClick={handleSaveCurrentPlan}
+                        className="flex-1 bg-blue-500 text-white py-4.5 rounded-[16px] font-semibold hover:bg-blue-600 flex justify-center items-center gap-2 transition-all shadow-sm active:scale-95 text-[15px]"
                      >
-                        <Edit2 size={18} strokeWidth={1.5} />
-                        {t.edit} {t.step2}
+                        <Save size={18} strokeWidth={1.5} />
+                        {lang === 'ar' ? 'حفظ الخطة في الأرشيف' : 'Save Plan to Archive'}
                      </button>
+                     
+                     <div className="flex w-full gap-4">
+                         <button 
+                            onClick={handlePrevStep}
+                            className="flex-1 bg-white border border-slate-200/80 text-slate-700 py-4.5 rounded-[16px] font-semibold hover:bg-slate-50 flex justify-center items-center gap-2 transition-all shadow-sm active:scale-95 text-[15px]"
+                         >
+                            <Edit2 size={18} strokeWidth={1.5} />
+                            {t.edit} {t.step2}
+                         </button>
 
-                     <button 
-                        onClick={exportPDF}
-                        disabled={isExporting}
-                        className={`flex-1 bg-[#1c1c1e] text-white py-4.5 rounded-[16px] font-semibold hover:bg-black flex justify-center items-center gap-2 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.1)] active:scale-95 text-[15px] ${isExporting ? 'opacity-70 cursor-wait scale-100' : ''}`}
-                     >
-                        {isExporting ? <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></div> : <Download size={18} strokeWidth={1.5} />}
-                        <span>{t.exportPDF}</span>
-                     </button>
+                         <button 
+                            onClick={exportPDF}
+                            disabled={isExporting}
+                            className={`flex-1 bg-[#1c1c1e] text-white py-4.5 rounded-[16px] font-semibold hover:bg-black flex justify-center items-center gap-2 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.1)] active:scale-95 text-[15px] ${isExporting ? 'opacity-70 cursor-wait scale-100' : ''}`}
+                         >
+                            {isExporting ? <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></div> : <Download size={18} strokeWidth={1.5} />}
+                            <span>{t.exportPDF}</span>
+                         </button>
+                     </div>
                  </div>
               </div>
             </div>
@@ -843,6 +971,60 @@ function App() {
       {/* Warning Modal (For Category Limit Checks - Non Blocking) */}
       {renderWarningModalContent()}
 
+      {/* Saved Plans Modal */}
+      {isSavedPlansModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-[32px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                 <RotateCcw className="text-[#007AFF]" />
+                 {lang === 'ar' ? 'أرشيف الخطط المالية' : 'Financial Plans Archive'}
+              </h3>
+              <button onClick={() => setIsSavedPlansModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                 <X size={20} />
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto pr-2 space-y-4">
+               {savedPlans.length === 0 ? (
+                 <div className="text-center text-slate-500 py-10">
+                   {lang === 'ar' ? 'لا يوجد خطط محفوظة حالياً.' : 'No saved plans yet.'}
+                 </div>
+               ) : (
+                 savedPlans.map((plan, idx) => (
+                   <div key={idx} className="border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 hover:border-[#007AFF]/30 transition-colors">
+                      <div className="flex justify-between items-start">
+                         <div>
+                            <div className="font-bold text-slate-800 text-[16px]">{plan.name}</div>
+                            <div className="text-slate-400 text-[12px]">{new Date(plan.date).toLocaleDateString()}</div>
+                         </div>
+                         <div className="text-[#007AFF] font-bold tabular-nums">
+                            {plan.salary.toLocaleString()} <span className="text-[11px] font-normal text-slate-500">{t.currency}</span>
+                         </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                         <button 
+                            onClick={() => handleLoadPlan(plan)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+                         >
+                            {lang === 'ar' ? 'استعادة الخطة' : 'Restore Plan'}
+                         </button>
+                         <button 
+                            onClick={() => handleDeletePlan(idx)}
+                            className="text-red-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-colors"
+                         >
+                            <Trash2 size={18} />
+                         </button>
+                      </div>
+                   </div>
+                 ))
+               )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Persistent Footer - Centered always */}
       <footer className="fixed bottom-0 w-full bg-white/70 backdrop-blur-[20px] saturate-[1.8] border-t border-slate-900/5 py-[env(safe-area-inset-bottom,12px)] px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex justify-center items-center transition-all">
         <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-200/60 shadow-sm my-2">
@@ -872,6 +1054,6 @@ function App() {
   );
 }
 
-const Edit2 = ({size}:{size:number}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>;
+
 
 export default App;
