@@ -115,8 +115,8 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
             <span className="text-[#007AFF] block mt-1 sm:mt-2 font-black text-2xl sm:text-4xl">{currentItem[0]}</span>
           </h3>
           
-          <div className="text-slate-500 bg-slate-50/80 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] mb-6 sm:mb-8 mx-auto max-w-lg border border-slate-100 shadow-sm mt-4 sm:mt-6">
-             <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg md:text-xl font-medium text-slate-700 leading-relaxed">
+          <div className="text-slate-500 bg-slate-50/80 p-4 sm:p-6 rounded-[20px] mb-4 mx-auto max-w-lg border border-slate-100 shadow-sm mt-3">
+             <div className="flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg font-medium text-slate-700 leading-relaxed">
                 <Info size={20} className="shrink-0 text-blue-500 opacity-80 sm:w-6 sm:h-6" strokeWidth={1.5} />
                 <span>{currentItem[1]}</span>
              </div>
@@ -201,9 +201,9 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
                 <h3 className="text-[24px] font-bold text-slate-900 mb-4 tracking-tight text-center">
                     {lang === 'ar' ? 'هل لديك مصروفات شهرية أخرى؟' : 'Do you have other monthly expenses?'}
                 </h3>
-                <div className="text-slate-500 bg-slate-50/80 p-6 rounded-[24px] text-sm mb-10 mx-auto max-w-md border border-slate-200/50 shadow-sm mt-4 text-center">
-                    <p className="font-medium text-[15px] leading-relaxed text-slate-700">{lang === 'ar' ? 'القائمة شارفت على الانتهاء! إذا كان لديك أي مصروف شهري غير مذكور في القائمة، يمكنك إضافته يدوياً.' : 'If you have any unlisted monthly expense, you can add it manually.'}</p>
-                    <p className="text-[13px] text-slate-400 mt-5 pt-5 border-t border-slate-200/60 font-medium">
+                <div className="text-slate-500 bg-slate-50/80 p-5 rounded-[20px] text-sm mb-6 mx-auto max-w-md border border-slate-200/50 shadow-sm mt-4 text-center">
+                    <p className="font-medium text-[14px] leading-relaxed text-slate-700">{lang === 'ar' ? 'القائمة شارفت على الانتهاء! إذا كان لديك أي مصروف شهري غير مذكور في القائمة، يمكنك إضافته يدوياً.' : 'If you have any unlisted monthly expense, you can add it manually.'}</p>
+                    <p className="text-[12px] text-slate-400 mt-4 pt-4 border-t border-slate-200/60 font-medium">
                         {lang === 'ar' ? 'يمكنك التعديل أو الحذف لاحقاً.' : 'You can add multiple expenses and edit them later.'}
                     </p>
                 </div>
@@ -291,10 +291,10 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
   );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[350px] sm:min-h-[450px] w-full max-w-2xl mx-auto animate-fade-in px-1 sm:px-4">
+    <div className="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] w-full max-w-2xl mx-auto animate-fade-in px-1 sm:px-4">
       
       {/* Progress Bar */}
-      <div className="w-full relative mb-6 sm:mb-12">
+      <div className="w-full relative mb-5 sm:mb-8">
         <div className="w-full h-1.5 sm:h-2 bg-slate-200/60 rounded-full overflow-hidden">
           <div 
             className="h-full bg-[#007AFF] transition-all duration-500 ease-out"
@@ -315,11 +315,11 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
         )}
       </div>
 
-      <div className={`bg-white/70 backdrop-blur-3xl rounded-[32px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-6 sm:p-12 w-full relative transition-all duration-300 transform ${isAnimating ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
+      <div className={`bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-5 sm:p-8 w-full relative transition-all duration-300 transform ${isAnimating ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
         
         {/* Item Count Badge (Only in checklist phase) */}
         {!isCustomPhase && (
-            <div className="absolute top-[28px] end-8 sm:left-8 sm:end-auto text-[12px] font-bold text-slate-400 bg-slate-100/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/60 shadow-sm">
+            <div className="absolute top-[20px] end-5 sm:left-5 sm:end-auto text-[12px] font-bold text-slate-400 bg-slate-100/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/60 shadow-sm">
             {currentIndex + 1} / {checklistItems.length}
             </div>
         )}

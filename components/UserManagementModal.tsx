@@ -342,11 +342,11 @@ $$;
   }
 
   return (
-    <div className="fixed inset-0 bg-[#000000]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 sm:p-6 pb-20 sm:pb-6" dir="rtl">
-      <div className="bg-white/95 backdrop-blur-3xl w-full max-w-5xl rounded-[24px] sm:rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex flex-col h-full sm:h-auto max-h-[85vh] sm:max-h-[90vh] overflow-hidden border border-white/20">
+    <div className="fixed inset-0 bg-[#000000]/40 backdrop-blur-md flex items-center justify-center z-[100] p-3 sm:p-4 pb-16 sm:pb-4" dir="rtl">
+      <div className="bg-white/95 backdrop-blur-3xl w-full max-w-5xl rounded-[20px] sm:rounded-[24px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] flex flex-col h-full sm:h-auto max-h-[85vh] sm:max-h-[90vh] overflow-hidden border border-white/20">
         
         {/* Header */}
-        <div className="flex justify-between items-center px-5 sm:px-8 py-4 sm:py-6 border-b border-slate-200/50 bg-white/50 relative">
+        <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200/50 bg-white/50 relative">
           <div className="flex flex-col gap-1 sm:gap-1.5">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <h2 className="text-[20px] sm:text-[24px] font-bold text-slate-900 tracking-tight">إدارة المستخدمين</h2>
@@ -370,9 +370,9 @@ $$;
         </div>
 
         {/* Content */}
-        <div className="p-5 sm:p-8 overflow-y-auto flex-1 hide-scrollbar">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 hide-scrollbar">
           
-          <div className="flex justify-end mb-4 sm:mb-6">
+          <div className="flex justify-end mb-3 sm:mb-4">
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-[#007AFF] text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-[12px] sm:rounded-[16px] flex items-center gap-1.5 sm:gap-2 text-[12px] sm:text-[14px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_2px_12px_rgba(0,122,255,0.2)] active:scale-95"
@@ -384,8 +384,8 @@ $$;
 
           {/* Add Form */}
           {showAddForm && (
-            <div className="bg-slate-50/50 border border-slate-200/60 p-4 sm:p-6 rounded-[16px] sm:rounded-[24px] mb-6 sm:mb-8 animate-in fade-in slide-in-from-top-2">
-              <h3 className="text-[14px] sm:text-[15px] font-bold text-slate-800 mb-4 sm:mb-5 flex items-center gap-2">
+            <div className="bg-slate-50/50 border border-slate-200/60 p-3 sm:p-4 rounded-[16px] mb-4 sm:mb-5 animate-in fade-in slide-in-from-top-2">
+              <h3 className="text-[14px] sm:text-[15px] font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <UserProfileIcon role="admin" />
                 إنشاء حساب جديد
               </h3>

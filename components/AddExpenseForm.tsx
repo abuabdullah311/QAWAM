@@ -154,8 +154,8 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
   const isRtl = lang === 'ar';
 
   return (
-    <div className="bg-transparent p-5 sm:p-8 w-full max-w-2xl" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+    <div className="bg-transparent p-4 sm:p-5 w-full max-w-2xl" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
         <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2.5 tracking-tight">
           {editingExpense ? <Edit2Icon /> : <PlusCircleIcon />}
           {editingExpense ? (lang === 'ar' ? 'تعديل المصروف' : 'Edit Expense') : t.addExpense}
@@ -168,8 +168,8 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
         </button>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           
           <div className="flex flex-col gap-1.5">
             <div>
@@ -257,7 +257,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-slate-100">
+        <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-slate-100">
             <button
               type="button"
               onClick={onCancelEdit}

@@ -80,7 +80,7 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#fbfbfd] p-4 sm:p-6 font-['Almarai',-apple-system,BlinkMacSystemFont,sans-serif]" dir={isRtl ? "rtl" : "ltr"}>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#fbfbfd] p-4 font-['Almarai',-apple-system,BlinkMacSystemFont,sans-serif]" dir={isRtl ? "rtl" : "ltr"}>
       {setLang && (
         <div className="absolute top-4 end-4 sm:top-6 sm:end-6 z-50">
           <button 
@@ -95,43 +95,43 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
       )}
 
       {/* Brand logo area */}
-      <div className="mb-8 flex flex-col items-center">
+      <div className="mb-5 flex flex-col items-center">
          <img 
             src="/logo.png" 
             alt={isRtl ? "شعار قوام" : "Qawam Logo"} 
-            className="h-20 w-auto object-contain mb-2"
+            className="h-16 w-auto object-contain mb-1"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }} 
          />
       </div>
 
-      <div className="max-w-[400px] w-full bg-white/80 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-6 sm:p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-[28px] font-bold text-slate-900 leading-tight tracking-tight">
+      <div className="max-w-[400px] w-full bg-white/80 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-5 sm:p-6">
+        <div className="text-center mb-5">
+          <h2 className="text-[24px] font-bold text-slate-900 leading-tight tracking-tight">
             {isSignUp ? (isRtl ? 'إنشاء حساب جديد' : 'Create an Account') : (isRtl ? 'تسجيل الدخول' : 'Sign In')}
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (
-            <div className="space-y-1.5">
-              <label className="block text-[13px] font-semibold text-slate-600 px-1">{isRtl ? 'اسم المستخدم' : 'Username'}</label>
+            <div className="space-y-1">
+              <label className="block text-[12px] font-semibold text-slate-600 px-1">{isRtl ? 'اسم المستخدم' : 'Username'}</label>
               <div className="relative">
                 <input
                   type="text"
                   required={isSignUp}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-slate-50/50 hover:bg-slate-50 py-3.5 px-4 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm"
+                  className="w-full bg-slate-50/50 hover:bg-slate-50 py-2.5 px-3 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm"
                   placeholder={isRtl ? 'اسم المستخدم' : 'Username'}
                 />
               </div>
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="block text-[13px] font-semibold text-slate-600 px-1">{isRtl ? 'البريد الإلكتروني' : 'Email Address'}</label>
+          <div className="space-y-1">
+            <label className="block text-[12px] font-semibold text-slate-600 px-1">{isRtl ? 'البريد الإلكتروني' : 'Email Address'}</label>
             <div className="relative">
               <input
                 type="email"
@@ -141,14 +141,14 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
                 dir="ltr"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-50/50 hover:bg-slate-50 py-3.5 px-4 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm"
+                className="w-full bg-slate-50/50 hover:bg-slate-50 py-2.5 px-3 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm"
                 placeholder="name@example.com"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-[13px] font-semibold text-slate-600 px-1">{isRtl ? 'كلمة المرور' : 'Password'}</label>
+          <div className="space-y-1">
+            <label className="block text-[12px] font-semibold text-slate-600 px-1">{isRtl ? 'كلمة المرور' : 'Password'}</label>
             <div className="relative">
               <input
                 type="password"
@@ -156,7 +156,7 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
                 dir="ltr"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50/50 hover:bg-slate-50 py-3.5 px-4 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm font-sans tracking-widest"
+                className="w-full bg-slate-50/50 hover:bg-slate-50 py-2.5 px-3 rounded-xl border border-slate-200 focus:bg-white focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10 transition-all duration-200 outline-none text-[16px] text-slate-900 shadow-sm font-sans tracking-widest"
                 placeholder="••••••••"
                 minLength={6}
               />
@@ -178,13 +178,13 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#007AFF] hover:bg-[#0062cc] active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm text-[16px] mt-2"
+            className="w-full bg-[#007AFF] hover:bg-[#0062cc] active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm text-[15px] mt-2"
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : (isSignUp ? (isRtl ? 'إنشاء حساب جديد' : 'Create Account') : (isRtl ? 'تسجيل الدخول' : 'Sign In'))}
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+        <div className="mt-5 pt-4 border-t border-slate-100 text-center">
            <button
              type="button"
              onClick={() => {
@@ -200,14 +200,14 @@ export function Auth({ onLoginSuccess, lang = 'ar', setLang }: AuthProps) {
       </div>
       
       {/* Footer text */}
-      <footer className="fixed bottom-0 w-full bg-white/70 backdrop-blur-[20px] saturate-[1.8] border-t border-slate-900/5 py-[env(safe-area-inset-bottom,12px)] px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex flex-col justify-center items-center gap-2 transition-all">
-        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-200/60 shadow-sm">
+      <footer className="fixed bottom-0 w-full bg-white border-t border-slate-900/5 py-1 px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex flex-col justify-center items-center gap-1 transition-all">
+        <div className="flex items-center gap-2.5 text-[12px] text-slate-500 font-medium bg-transparent px-2 py-1 rounded-full">
            <span>{isRtl ? 'تطوير' : 'Developed by'}</span>
-           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity flex items-center">
+           <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="opacity-90 hover:opacity-100 transition-opacity flex items-center">
              <img 
                src="/ashareef_logo.png" 
                alt="A.Shareef Logo" 
-               className="h-[18px] w-auto inline-block ml-1"
+               className="h-[36px] w-auto inline-block ml-1"
                onError={(e) => {
                  (e.target as HTMLImageElement).style.display = 'none';
                }}

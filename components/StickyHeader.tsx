@@ -77,17 +77,17 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
   ];
 
   return (
-    <div className="sticky top-0 z-50 pt-2 pb-3 px-4 bg-white/70 backdrop-blur-[20px] saturate-[1.8] border-b border-slate-900/5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] mb-8 transition-all duration-300">
-      <div className="max-w-5xl mx-auto flex flex-col gap-3">
+    <div className="sticky top-0 z-50 pt-2 pb-2 px-4 bg-white/70 backdrop-blur-[20px] saturate-[1.8] border-b border-slate-900/5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] mb-4 transition-all duration-300">
+      <div className="max-w-5xl mx-auto flex flex-col gap-2">
         
         {/* Row 1: Logo & Icons */}
-        <div className="flex items-center justify-between w-full h-12">
+        <div className="flex items-center justify-between w-full h-10">
            {/* Logo */}
            <div className="flex items-center pb-1 gap-2 shrink-0">
               <img 
                 src="/logo.png" 
                 alt="Qawam Logo" 
-                className="h-10 w-auto object-contain"
+                className="h-8 w-auto object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }} 
@@ -142,7 +142,7 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
         </div>
 
         {/* Row 2: User Info, Session & Visitors */}
-        <div className="flex items-center justify-between w-full bg-slate-50/80 border border-slate-200/60 rounded-[14px] px-4 py-2 mt-1 shadow-sm overflow-x-auto hide-scrollbar">
+        <div className="flex items-center justify-between w-full bg-slate-50/80 border border-slate-200/60 rounded-[14px] px-3 py-1 mt-0 shadow-sm overflow-x-auto hide-scrollbar">
            <div className="flex items-center gap-2.5 text-[12px] font-medium min-w-max">
               {isEditingUsername ? (
                  <form onSubmit={handleSaveUsername} className="flex items-center gap-1.5 bg-white p-1 rounded-[8px] border border-slate-200 shadow-sm">

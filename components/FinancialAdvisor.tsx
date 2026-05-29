@@ -177,7 +177,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
       
       {isLoading ? (
         <div className="text-center flex flex-col items-center">
-            <div className="relative w-24 h-24 mb-8">
+            <div className="relative w-20 h-20 mb-5">
                  <div className="absolute inset-0 border-[6px] border-slate-100 rounded-full"></div>
                  <div className="absolute inset-0 border-[6px] border-blue-500 rounded-full border-t-transparent animate-spin"></div>
                  <div className="absolute inset-0 flex items-center justify-center text-blue-500">
@@ -193,7 +193,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
         </div>
       ) : (
         <div className="w-full max-w-lg animate-[fadeIn_0.5s_ease-out]">
-            <div className="text-center mb-10">
+            <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl mb-6 shadow-lg shadow-indigo-500/20 transform transition-transform hover:scale-105">
                     <Bot size={36} strokeWidth={1.5} />
                 </div>
@@ -206,7 +206,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
             </div>
 
             {analysisResult.rule && (
-                <div className="bg-white border text-center border-slate-100 rounded-3xl p-8 mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div className="bg-white border text-center border-slate-100 rounded-3xl p-6 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300">
                      <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-5 transition-opacity duration-500 transform scale-150 -translate-y-10">
                         <PieChart size={160} />
                      </div>
@@ -233,7 +233,7 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
             )}
 
             {/* Custom Rule UI */}
-            <div className="mb-8">
+            <div className="mb-5">
                 <button 
                    onClick={() => {
                         setIsCustomizing(!isCustomizing);
