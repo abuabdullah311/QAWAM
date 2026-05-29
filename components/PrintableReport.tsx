@@ -1,7 +1,8 @@
 import React from 'react';
 import { DashboardMetrics, Expense, ExpenseType, Language, BudgetRule } from '../types';
-import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
 import { COLORS, TRANSLATIONS, EXPENSE_TYPE_LABELS } from '../constants';
+import { ShieldAlert, Heart, PiggyBank } from 'lucide-react';
 
 interface PrintableReportProps {
   salary: number;
@@ -20,6 +21,37 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
 }) => {
   const t = TRANSLATIONS[lang];
   const isRtl = lang === 'ar';
+
+  const sortOrder: Record<ExpenseType, number> = {
+    [ExpenseType.NEED]: 1,
+    [ExpenseType.WANT]: 2,
+    [ExpenseType.SAVING]: 3,
+  };
+  const sortedExpenses = [...expenses].sort((a, b) => sortOrder[a.type] - sortOrder[b.type]);
+
+  const getTypeBadge = (type: ExpenseType) => {
+    const label = EXPENSE_TYPE_LABELS[lang][type];
+    switch (type) {
+      case ExpenseType.NEED: return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[10px] bg-red-50 text-red-600 font-semibold border border-red-100">
+          <ShieldAlert size={10} />
+          {label}
+        </span>
+      );
+      case ExpenseType.WANT: return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[10px] bg-orange-50 text-orange-600 font-semibold border border-orange-100">
+          <Heart size={10} />
+          {label}
+        </span>
+      );
+      case ExpenseType.SAVING: return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[10px] bg-emerald-50 text-emerald-600 font-semibold border border-emerald-100">
+          <PiggyBank size={10} />
+          {label}
+        </span>
+      );
+    }
+  };
 
   // Pie Chart Data
   const pieData = [
@@ -126,6 +158,18 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                 paddingAngle={2}
                 dataKey="value"
                 isAnimationActive={false}
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, value, index }) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius = outerRadius + 15;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  const pct = ((value/salary)*100).toFixed(0);
+                  return (
+                    <text x={x} y={y} fill="#4b5563" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={9} fontWeight="bold">
+                      {pct}%
+                    </text>
+                  );
+                }}
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={1} stroke="#fff" />
@@ -163,11 +207,14 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
                 formatter={(val) => val === 'target' ? t.target : t.actual}
                 wrapperStyle={{ fontSize: '10px' }}
               />
-              <Bar dataKey="target" fill={COLORS.target} barSize={25} isAnimationActive={false} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="target" fill={COLORS.target} barSize={25} isAnimationActive={false} radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="target" position="top" fill="#9ca3af" fontSize={9} formatter={(val: number) => `${val}%`} />
+              </Bar>
               <Bar dataKey="actual" barSize={25} isAnimationActive={false} radius={[4, 4, 0, 0]}>
                 {barData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
+                <LabelList dataKey="actual" position="top" fill="#4b5563" fontSize={9} fontWeight="bold" formatter={(val: number) => `${val}%`} />
               </Bar>
             </BarChart>
           </div>
@@ -184,18 +231,18 @@ export const PrintableReport: React.FC<PrintableReportProps> = ({
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="p-2 border border-gray-200 text-xs">{t.expenseName}</th>
-              <th className="p-2 border border-gray-200 text-xs w-24">{t.expenseType}</th>
+              <th className="p-2 border border-gray-200 text-xs w-28">{t.expenseType}</th>
               <th className="p-2 border border-gray-200 text-xs w-24">{t.expenseAmount}</th>
               <th className="p-2 border border-gray-200 text-xs w-16">%</th>
               <th className="p-2 border border-gray-200 text-xs">{t.notes}</th>
             </tr>
           </thead>
           <tbody>
-            {expenses.map((expense, idx) => (
+            {sortedExpenses.map((expense, idx) => (
               <tr key={expense.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="p-2 border border-gray-200 font-bold text-gray-800">{expense.name}</td>
-                <td className="p-2 border border-gray-200 text-gray-600 text-xs">
-                    {EXPENSE_TYPE_LABELS[lang][expense.type]}
+                <td className="p-2 border border-gray-200">
+                    {getTypeBadge(expense.type)}
                 </td>
                 <td className="p-2 border border-gray-200 font-mono text-gray-700">{expense.amount.toLocaleString()}</td>
                 <td className="p-2 border border-gray-200 text-xs text-gray-500">

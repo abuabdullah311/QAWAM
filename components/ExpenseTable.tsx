@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, ShieldAlert, Heart, PiggyBank } from 'lucide-react';
 import { Expense, ExpenseType, Language } from '../types';
 import { TRANSLATIONS, EXPENSE_TYPE_LABELS } from '../constants';
 
@@ -26,11 +26,35 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
   const getTypeBadge = (type: ExpenseType) => {
     const label = EXPENSE_TYPE_LABELS[lang][type];
     switch (type) {
-      case ExpenseType.NEED: return <span className="px-2.5 py-1 rounded-full text-[11px] bg-[#FF3B30]/10 text-[#FF3B30] font-semibold tracking-wide">{label}</span>;
-      case ExpenseType.WANT: return <span className="px-2.5 py-1 rounded-full text-[11px] bg-[#FF9500]/10 text-[#FF9500] font-semibold tracking-wide">{label}</span>;
-      case ExpenseType.SAVING: return <span className="px-2.5 py-1 rounded-full text-[11px] bg-[#34C759]/10 text-[#34C759] font-semibold tracking-wide">{label}</span>;
+      case ExpenseType.NEED: return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[12px] bg-red-50 text-red-600 font-semibold tracking-wide border border-red-100/50 shadow-sm">
+          <ShieldAlert size={14} className="opacity-80" />
+          {label}
+        </span>
+      );
+      case ExpenseType.WANT: return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[12px] bg-orange-50 text-orange-600 font-semibold tracking-wide border border-orange-100/50 shadow-sm">
+          <Heart size={14} className="opacity-80" />
+          {label}
+        </span>
+      );
+      case ExpenseType.SAVING: return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[12px] bg-emerald-50 text-emerald-600 font-semibold tracking-wide border border-emerald-100/50 shadow-sm">
+          <PiggyBank size={14} className="opacity-80" />
+          {label}
+        </span>
+      );
     }
   };
+
+  const sortOrder: Record<ExpenseType, number> = {
+    [ExpenseType.NEED]: 1,
+    [ExpenseType.WANT]: 2,
+    [ExpenseType.SAVING]: 3,
+  };
+
+  const sortedExpenses = [...expenses].sort((a, b) => sortOrder[a.type] - sortOrder[b.type]);
+
 
   return (
     <>
@@ -47,7 +71,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-transparent">
-            {expenses.length === 0 ? (
+            {sortedExpenses.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-16 text-center text-slate-400 font-medium">
                   <div className="flex flex-col items-center justify-center gap-2">
@@ -56,7 +80,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
                 </td>
               </tr>
             ) : (
-              expenses.map((expense) => {
+              sortedExpenses.map((expense) => {
                 const percentage = salary > 0 ? Math.ceil((expense.amount / salary) * 100) : 0;
                 return (
                   <tr key={expense.id} className="hover:bg-slate-50/50 transition-colors group">
@@ -97,14 +121,14 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, salary, on
 
       {/* Mobile view */}
       <div className="md:hidden flex flex-col divide-y divide-slate-100 w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-        {expenses.length === 0 ? (
+        {sortedExpenses.length === 0 ? (
            <div className="px-4 py-16 text-center text-slate-400 font-medium">
              <div className="flex flex-col items-center justify-center gap-2">
                 <span className="text-[15px]">{t.noExpenses}</span>
              </div>
            </div>
         ) : (
-          expenses.map((expense) => {
+          sortedExpenses.map((expense) => {
              const percentage = salary > 0 ? Math.ceil((expense.amount / salary) * 100) : 0;
              return (
               <div key={expense.id} className="p-4 sm:p-5 flex flex-col gap-3.5 bg-transparent hover:bg-slate-50/50 transition-colors">

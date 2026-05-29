@@ -63,7 +63,7 @@ function App() {
   // State for Category Info Popup after Salary
   const [showCategoryInfo, setShowCategoryInfo] = useState(false);
   
-  const [visitorCount, setVisitorCount] = useState<number>(12050);
+  const [visitorCount, setVisitorCount] = useState<number>(253);
   const [isLiveCount, setIsLiveCount] = useState(false);
 
   const t = TRANSLATIONS[lang];
@@ -128,17 +128,29 @@ function App() {
 
   // Data fetching handled by fetchUserProfile now
   useEffect(() => {
-    // Visitor Algorithm
-    let globalVisits = parseInt(localStorage.getItem('qawam_total_page_views') || '120', 10);
+    // Visitor Algorithm using Supabase for global platform statistics
+    const fetchGlobalVisits = async () => {
+      try {
+        if (!isPageLoaded) {
+          // Increment global counter on the server
+          await supabase.rpc('increment_page_views');
+          isPageLoaded = true;
+        }
+        
+        // Fetch the updated global count
+        const { data, error } = await supabase.from('page_views').select('count').eq('id', 'global').single();
+        
+        if (data && data.count) {
+          // Base it around 253 as requested.
+          setVisitorCount(253 + data.count);
+        }
+        setIsLiveCount(true);
+      } catch (e) {
+        console.error('Error fetching global visitor count', e);
+      }
+    };
     
-    if (!isPageLoaded) {
-      globalVisits += 1;
-      localStorage.setItem('qawam_total_page_views', globalVisits.toString());
-      isPageLoaded = true;
-    }
-    
-    setVisitorCount(globalVisits);
-    setIsLiveCount(true);
+    fetchGlobalVisits();
   }, []);
 
   // Save on Change to Supabase
