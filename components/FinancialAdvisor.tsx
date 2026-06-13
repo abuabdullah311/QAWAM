@@ -8,13 +8,15 @@ interface FinancialAdvisorProps {
   salary: number;
   expenses: Expense[];
   onFinish: () => void;
+  onBack?: () => void;
   lang: Language;
 }
 
 export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({ 
   salary, 
   expenses,
-  onFinish, 
+  onFinish,
+  onBack,
   lang 
 }) => {
   const t = TRANSLATIONS[lang];
@@ -150,6 +152,27 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
         </div>
       ) : (
         <div className="w-full max-w-lg animate-[fadeIn_0.5s_ease-out]">
+            
+            {/* Top Navigation */}
+            <div className="flex gap-2 mb-6 w-full">
+                {onBack && (
+                  <button 
+                      onClick={onBack}
+                      className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-[12px] font-semibold flex-[0.8] sm:flex-none shadow-sm hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px]"
+                  >
+                      {isRtl ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+                      {lang === 'ar' ? 'السابق' : 'Prev'}
+                  </button>
+                )}
+                <button 
+                    onClick={onFinish}
+                    className={`flex-1 py-2 bg-[#1c1c1e] hover:bg-[#2c2c2e] text-white rounded-[12px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.2)] transition-all active:scale-95 flex items-center justify-center gap-1.5 text-[13px] sm:text-[14px]`}
+                >
+                    {lang === 'ar' ? 'عرض النتائج' : 'View Results'}
+                    {isRtl ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+                </button>
+            </div>
+
             <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl mb-6 shadow-lg shadow-indigo-500/20 transform transition-transform hover:scale-105">
                     <Bot size={36} strokeWidth={1.5} />
@@ -186,16 +209,8 @@ export const FinancialAdvisor: React.FC<FinancialAdvisorProps> = ({
                              <div className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-wide">{lang === 'ar' ? 'ادخار' : 'Savings'}</div>
                          </div>
                      </div>
-                </div>
+                 </div>
             )}
-
-            <button 
-                onClick={onFinish}
-                className="w-full py-5 bg-[#1c1c1e] hover:bg-[#2c2c2e] text-white rounded-2xl font-bold shadow-xl shadow-slate-900/10 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
-            >
-                {lang === 'ar' ? 'عرض النتائج التفصيلية' : 'View Detailed Results'}
-                {isRtl ? <ArrowLeft size={20} strokeWidth={2.5} /> : <ArrowRight size={20} strokeWidth={2.5} />}
-            </button>
         </div>
       )}
     </div>

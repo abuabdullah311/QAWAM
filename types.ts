@@ -7,8 +7,8 @@ export enum ExpenseType {
 export enum AppStep {
   SALARY = 1,
   WIZARD = 2,
-  ADVISOR = 3,
-  EXPENSES = 4,
+  EXPENSES = 3,
+  ADVISOR = 4,
   DASHBOARD = 5,
   TOOLS = 6
 }

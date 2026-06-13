@@ -70,9 +70,9 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
 
   const steps = [
     { id: AppStep.SALARY, label: lang === 'ar' ? 'الراتب' : 'Salary', icon: CreditCard },
-    { id: AppStep.WIZARD, label: lang === 'ar' ? 'الخطة' : 'Plan', icon: Plus },
-    { id: AppStep.ADVISOR, label: lang === 'ar' ? 'التحليل' : 'Analysis', icon: Sparkles },
+    { id: AppStep.WIZARD, label: lang === 'ar' ? 'الإعداد' : 'Setup', icon: Plus },
     { id: AppStep.EXPENSES, label: lang === 'ar' ? 'المصروفات' : 'Expenses', icon: List },
+    { id: AppStep.ADVISOR, label: lang === 'ar' ? 'التحليل' : 'Analysis', icon: Sparkles },
     { id: AppStep.DASHBOARD, label: lang === 'ar' ? 'النتائج' : 'Results', icon: BarChart3 },
     { id: AppStep.TOOLS, label: lang === 'ar' ? 'الأدوات' : 'Tools', icon: Wrench },
   ];

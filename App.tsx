@@ -191,8 +191,7 @@ function App() {
       if (step === AppStep.SALARY && salary > 0) {
           setShowCategoryInfo(true);
       }
-      else if (step === AppStep.WIZARD) setStep(AppStep.ADVISOR);
-      else if (step === AppStep.ADVISOR) setStep(AppStep.EXPENSES);
+      else if (step === AppStep.WIZARD) setStep(AppStep.EXPENSES);
       else if (step === AppStep.EXPENSES) {
           
           // 1. STRICT BLOCKING: Total Expenses > Salary
@@ -222,6 +221,9 @@ function App() {
           }
 
           // If no blocking errors and no warnings (or warnings ignored), proceed
+          setStep(AppStep.ADVISOR);
+      }
+      else if (step === AppStep.ADVISOR) {
           setStep(AppStep.DASHBOARD);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -260,9 +262,9 @@ function App() {
 
   const handlePrevStep = () => {
       if (step === AppStep.WIZARD) setStep(AppStep.SALARY);
-      else if (step === AppStep.ADVISOR) setStep(AppStep.WIZARD);
-      else if (step === AppStep.EXPENSES) setStep(AppStep.ADVISOR);
-      else if (step === AppStep.DASHBOARD) setStep(AppStep.EXPENSES);
+      else if (step === AppStep.EXPENSES) setStep(AppStep.WIZARD);
+      else if (step === AppStep.ADVISOR) setStep(AppStep.EXPENSES);
+      else if (step === AppStep.DASHBOARD) setStep(AppStep.ADVISOR);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
@@ -272,7 +274,7 @@ function App() {
           id: Date.now().toString() + Math.random().toString()
       }));
       setExpenses(formatted);
-      setStep(AppStep.ADVISOR);
+      setStep(AppStep.EXPENSES);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -570,7 +572,28 @@ function App() {
         
         {/* --- STEP 1: SALARY --- */}
         {step === AppStep.SALARY && (
-            <div className="animate-fade-in flex flex-col items-center justify-center min-h-[30vh] sm:min-h-[40vh] px-2 py-2 sm:py-0 mt-3 sm:mt-4">
+            <div className="animate-fade-in flex flex-col items-center justify-center min-h-[30vh] sm:min-h-[40vh] px-2 py-2 sm:py-0 mt-2 sm:mt-4">
+                 {/* Top Navigation */}
+                 <div className="flex w-full max-w-xl gap-2 mb-4">
+                     <button 
+                         onClick={handleNextStep}
+                         disabled={salary <= 0}
+                         className={`flex-1 py-2.5 rounded-[12px] font-semibold text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 transition-all active:scale-95 ${salary > 0 ? 'bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'}`}
+                     >
+                         <span>{lang === 'ar' ? 'إدخال المصروفات آليا' : 'Auto Setup Expenses'}</span>
+                         {isRtl ? <ArrowLeft size={16} strokeWidth={1.5} /> : <ArrowRight size={16} strokeWidth={1.5} />}
+                     </button>
+                     {expenses.length === 0 && (
+                         <button
+                           onClick={() => setStep(AppStep.EXPENSES)}
+                           disabled={salary <= 0}
+                           className={`flex-1 py-2.5 rounded-[12px] font-semibold text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 transition-all active:scale-95 border ${salary > 0 ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm' : 'bg-transparent border-slate-100/50 text-slate-300 cursor-not-allowed'}`}
+                         >
+                           {lang === 'ar' ? 'التخطي وإدخال المصروفات يدويا' : 'Skip & Enter Manually'}
+                         </button>
+                     )}
+                 </div>
+
                  <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-slate-200/50 p-5 sm:p-8 w-full max-w-xl text-center relative overflow-hidden transition-all duration-500">
                     
                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-100 rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center shadow-sm">
@@ -580,7 +603,7 @@ function App() {
                     <h2 className="text-[18px] sm:text-[22px] font-bold text-slate-900 mb-1 tracking-tight">{t.salaryLabel}</h2>
                     <p className="text-[12px] sm:text-[13px] font-medium text-slate-500 mb-4 sm:mb-6">{t.salaryHint}</p>
                     
-                    <div className="relative mb-5 sm:mb-6 group bg-white/50 backdrop-blur-lg rounded-[20px] p-3 sm:p-5 border border-slate-200/60 transition-colors shadow-sm focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white">
+                    <div className="relative mb-2 sm:mb-4 group bg-white/50 backdrop-blur-lg rounded-[20px] p-3 sm:p-5 border border-slate-200/60 transition-colors shadow-sm focus-within:border-[#007AFF] focus-within:ring-4 focus-within:ring-[#007AFF]/10 focus-within:bg-white">
                         <input
                         type="text"
                         inputMode="decimal"
@@ -596,25 +619,6 @@ function App() {
                         />
                         <span className="absolute text-slate-400 font-bold bottom-[20px] sm:bottom-[28px] text-base sm:text-lg pointer-events-none end-4 sm:end-6">{t.currency}</span>
                     </div>
-
-                    <button 
-                        onClick={handleNextStep}
-                        disabled={salary <= 0}
-                        className={`w-full py-3 sm:py-3.5 rounded-[12px] sm:rounded-xl font-semibold text-[14px] sm:text-[16px] flex items-center justify-center gap-2 transition-all duration-200 transform active:scale-95 ${salary > 0 ? 'bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'}`}
-                    >
-                        <span>{t.next}</span>
-                        {isRtl ? <ArrowLeft size={20} strokeWidth={1.5} /> : <ArrowRight size={20} strokeWidth={1.5} />}
-                    </button>
-
-                    {expenses.length === 0 && (
-                        <button
-                          onClick={() => setStep(AppStep.EXPENSES)}
-                          disabled={salary <= 0}
-                          className={`mt-3 w-full py-3 rounded-xl font-medium text-[15px] flex items-center justify-center gap-2 transition-all duration-200 transform active:scale-95 border ${salary > 0 ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm' : 'bg-transparent border-slate-100/50 text-slate-300 cursor-not-allowed'}`}
-                        >
-                          {lang === 'ar' ? 'تخطي الإدخال السريع وإدخال المصاريف يدوياً' : 'Skip Wizard & Enter Manually'}
-                        </button>
-                    )}
                  </div>
             </div>
         )}
@@ -625,25 +629,46 @@ function App() {
                salary={salary}
                lang={lang}
                onComplete={handleWizardComplete}
+               onBack={() => setStep(AppStep.SALARY)}
             />
         )}
 
-        {/* --- STEP 3: AI ADVISOR (ANALYSIS ONLY) --- */}
+        {/* --- STEP 4: AI ADVISOR (ANALYSIS ONLY) --- */}
         {step === AppStep.ADVISOR && (
             <div className="animate-fade-in w-full max-w-2xl mx-auto">
                 <FinancialAdvisor 
                     salary={salary}
                     expenses={expenses}
-                    onFinish={() => setStep(AppStep.EXPENSES)}
+                    onFinish={() => setStep(AppStep.DASHBOARD)}
+                    onBack={() => setStep(AppStep.EXPENSES)}
                     lang={lang}
                 />
             </div>
         )}
 
-        {/* --- STEP 4: EXPENSES LIST --- */}
+        {/* --- STEP 3: EXPENSES LIST --- */}
         {step === AppStep.EXPENSES && (
             <div className="animate-fade-in space-y-3 sm:space-y-4 pt-2">
                 
+                {/* Top Navigation */}
+                <div className="flex gap-2 w-full justify-between">
+                     <button 
+                        onClick={handlePrevStep}
+                        className="px-4 py-2 rounded-[12px] text-slate-600 bg-white hover:bg-slate-50 border border-slate-200/80 shadow-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 text-[13px] sm:text-[14px] flex-[0.8] sm:flex-none"
+                     >
+                        {isRtl ? <ArrowRight size={16} strokeWidth={1.5} /> : <ArrowLeft size={16} strokeWidth={1.5} />}
+                        {t.back}
+                     </button>
+                     
+                     <button 
+                        onClick={handleNextStep}
+                        className="flex-1 sm:flex-none px-6 py-2 rounded-[12px] bg-[#007AFF] hover:bg-[#0062cc] text-white font-semibold flex items-center justify-center gap-1.5 shadow-[0_2px_12px_rgba(0,122,255,0.3)] transition-all active:scale-[0.98] text-[13px] sm:text-[14px]"
+                     >
+                        <span>{lang === 'ar' ? 'عرض التحليل' : 'View Analysis'}</span>
+                        {isRtl ? <ArrowLeft size={16} strokeWidth={1.5} /> : <ArrowRight size={16} strokeWidth={1.5} />}
+                     </button>
+                </div>
+
                 {/* Header Action */}
                 <div className="flex flex-col md:flex-row justify-between items-center bg-white/70 backdrop-blur-3xl p-3 sm:p-5 rounded-[16px] shadow-sm border border-slate-200/50 gap-3">
                     <div className="text-center md:text-start flex flex-col gap-1">
@@ -719,25 +744,6 @@ function App() {
                         lang={lang}
                      />
                 </div>
-
-                {/* Nav Buttons */}
-                <div className="flex justify-between mt-8 gap-4 pb-8">
-                     <button 
-                        onClick={handlePrevStep}
-                        className="px-6 py-3.5 rounded-[16px] text-slate-600 bg-white hover:bg-slate-50 border border-slate-200/80 shadow-sm font-semibold flex items-center gap-2 transition-all active:scale-95 text-[15px]"
-                     >
-                        {isRtl ? <ArrowRight size={18} strokeWidth={1.5} /> : <ArrowLeft size={18} strokeWidth={1.5} />}
-                        {t.back}
-                     </button>
-                     
-                     <button 
-                        onClick={handleNextStep}
-                        className="px-8 py-3.5 rounded-[16px] bg-[#007AFF] hover:bg-[#0062cc] text-white font-semibold flex items-center gap-2 shadow-[0_2px_12px_rgba(0,122,255,0.3)] transition-all active:scale-[0.98] text-[15px]"
-                     >
-                        <span>{t.finish}</span>
-                        {isRtl ? <ArrowLeft size={18} strokeWidth={1.5} /> : <ArrowRight size={18} strokeWidth={1.5} />}
-                     </button>
-                </div>
             </div>
         )}
 
@@ -745,6 +751,34 @@ function App() {
         {step === AppStep.DASHBOARD && (
           <div className="animate-fade-in space-y-6 pb-20">
             
+            {/* Top Navigation */}
+            <div className="flex w-full gap-2 mb-2">
+                 <button
+                    onClick={() => setStep(AppStep.ADVISOR)}
+                    className="flex-1 px-1 sm:px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-[12px] font-semibold hover:bg-slate-50 transition-all shadow-sm active:scale-95 text-[12px] sm:text-[14px] flex items-center justify-center gap-1 sm:gap-1.5"
+                 >
+                    {isRtl ? <ArrowRight size={16} strokeWidth={1.5} /> : <ArrowLeft size={16} strokeWidth={1.5} />}
+                    <span className="truncate">{lang === 'ar' ? 'السابق' : 'Prev'}</span>
+                 </button>
+                 
+                 <button
+                    onClick={() => setStep(AppStep.TOOLS)}
+                    className="flex-1 px-1 sm:px-4 py-2 bg-[#007AFF] text-white rounded-[12px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_4px_16px_rgba(0,122,255,0.2)] active:scale-95 text-[12px] sm:text-[14px] flex items-center justify-center gap-1 sm:gap-1.5"
+                 >
+                    <span className="truncate">{lang === 'ar' ? 'الأدوات' : 'Tools'}</span>
+                    {isRtl ? <ArrowLeft size={16} strokeWidth={1.5} /> : <ArrowRight size={16} strokeWidth={1.5} />}
+                 </button>
+
+                 <button 
+                    onClick={exportPDF}
+                    disabled={isExporting}
+                    className={`flex-[1.2] sm:flex-1 bg-[#1c1c1e] text-white py-2 px-1 sm:px-4 rounded-[12px] font-semibold hover:bg-black flex justify-center items-center gap-1 sm:gap-1.5 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.1)] active:scale-95 text-[12px] sm:text-[14px] ${isExporting ? 'opacity-70 cursor-wait scale-100' : ''}`}
+                 >
+                    {isExporting ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full flex-shrink-0"></div> : <Download size={16} strokeWidth={1.5} className="flex-shrink-0" />}
+                    <span className="truncate">{lang === 'ar' ? 'التقرير PDF' : 'PDF Report'}</span>
+                 </button>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Charts Column */}
               <div className="lg:col-span-1 flex flex-col gap-6">
@@ -785,17 +819,6 @@ function App() {
                         )}
                     </div>
                  </div>
-                 
-                 <div className="flex w-full gap-4">
-                     <button 
-                        onClick={exportPDF}
-                        disabled={isExporting}
-                        className={`w-full bg-[#1c1c1e] text-white py-4 rounded-[16px] font-semibold hover:bg-black flex justify-center items-center gap-2 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.1)] active:scale-95 text-[15px] ${isExporting ? 'opacity-70 cursor-wait scale-100' : ''}`}
-                     >
-                        {isExporting ? <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></div> : <Download size={18} strokeWidth={1.5} />}
-                        <span>{t.exportPDF}</span>
-                     </button>
-                 </div>
               </div>
             </div>
           </div>
@@ -804,13 +827,26 @@ function App() {
         {/* --- STEP 6: TOOLS --- */}
         {step === AppStep.TOOLS && (
           <div className="animate-fade-in pb-20 mt-4 max-w-2xl mx-auto">
+             
+             {!activeTool && (
+                <div className="mb-4">
+                    <button
+                        onClick={() => setStep(AppStep.DASHBOARD)}
+                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-[12px] font-semibold hover:bg-slate-50 transition-all shadow-sm active:scale-95 text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 w-full sm:w-auto"
+                    >
+                        {isRtl ? <ArrowRight size={16} strokeWidth={1.5} /> : <ArrowLeft size={16} strokeWidth={1.5} />}
+                        {lang === 'ar' ? 'السابق' : 'Prev'}
+                    </button>
+                </div>
+             )}
+
              {activeTool === 'PLANNER' && <SmartGoalPlanner salary={salary} expenses={expenses} metrics={metrics} lang={lang} onBack={() => setActiveTool(null)} />}
              {activeTool === 'LAB' && <FinancialFreedomLab salary={salary} expenses={expenses} metrics={metrics} lang={lang} onBack={() => setActiveTool(null)} />}
 
              {!activeTool && (
                  <div className="bg-white/70 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-200/50 p-6 md:p-8">
                     <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">
-                       {lang === 'ar' ? 'المخطط الاستراتيجي والأدوات الذكية' : 'Strategic Planner & Tools'}
+                       {lang === 'ar' ? 'الأدوات الذكية' : 'Smart Tools'}
                     </h2>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

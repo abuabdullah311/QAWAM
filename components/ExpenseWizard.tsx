@@ -7,9 +7,10 @@ interface ExpenseWizardProps {
   onComplete: (expenses: Omit<Expense, 'id'>[]) => void;
   lang: Language;
   salary: number;
+  onBack?: () => void;
 }
 
-export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, salary }) => {
+export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, salary, onBack }) => {
   const t = TRANSLATIONS[lang];
   const isRtl = lang === 'ar';
   
@@ -310,6 +311,36 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
   return (
     <div className="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] w-full max-w-2xl mx-auto animate-fade-in px-1 sm:px-4">
       
+      {/* Top Navigation */}
+      <div className="mb-4 w-full flex items-center justify-between gap-2">
+         {onBack && (
+            <button
+               onClick={onBack}
+               className="flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 bg-white/50 px-4 py-2 rounded-[12px] border border-slate-200/60 transition-colors active:scale-95 shadow-sm font-semibold text-[13px] sm:text-[14px]"
+            >
+               {isRtl ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+               {lang === 'ar' ? 'السابق' : 'Previous'}
+            </button>
+         )}
+
+         {!isCustomPhase ? (
+             <button
+                onClick={handleSkipAll}
+                className="flex-[0.8] sm:flex-none text-[13px] sm:text-[14px] font-semibold text-slate-500 hover:text-slate-700 bg-white/50 px-4 py-2 rounded-[12px] border border-slate-200/60 transition-colors active:scale-95 shadow-sm ms-auto"
+             >
+                {lang === 'ar' ? 'تخطي للإدخال اليدوي' : 'Skip to Manual'}
+             </button>
+         ) : (
+             <button
+               onClick={() => onComplete(collectedExpenses)}
+               className="flex-[0.8] sm:flex-none flex items-center justify-center gap-1.5 bg-[#007AFF] hover:bg-[#0062cc] text-white px-6 py-2 rounded-[12px] transition-colors shadow-[0_2px_12px_rgba(0,122,255,0.3)] active:scale-95 font-semibold text-[13px] sm:text-[14px] ms-auto"
+            >
+               {lang === 'ar' ? 'التالي' : 'Next'}
+               {isRtl ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+            </button>
+         )}
+      </div>
+
       {/* Progress Bar */}
       <div className="w-full relative mb-5 sm:mb-8">
         <div className="w-full h-1.5 sm:h-2 bg-slate-200/60 rounded-full overflow-hidden">
@@ -332,17 +363,6 @@ export const ExpenseWizard: React.FC<ExpenseWizardProps> = ({ onComplete, lang, 
         {isCustomPhase ? renderCustomPhase() : renderChecklistPhase()}
 
       </div>
-
-      {!isCustomPhase && (
-         <div className="mt-6 w-full flex justify-center">
-            <button
-               onClick={handleSkipAll}
-               className="text-[14px] font-semibold text-slate-500 hover:text-slate-700 bg-white/50 px-6 py-2.5 rounded-full border border-slate-200/60 transition-colors active:scale-95 shadow-sm"
-            >
-               {lang === 'ar' ? 'تخطي للإدخال اليدوي' : 'Skip to Manual Entry'}
-            </button>
-         </div>
-      )}
     </div>
   );
 };
