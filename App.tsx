@@ -574,11 +574,11 @@ function App() {
         {step === AppStep.SALARY && (
             <div className="animate-fade-in flex flex-col items-center justify-center min-h-[30vh] sm:min-h-[40vh] px-2 py-2 sm:py-0 mt-2 sm:mt-4">
                  {/* Top Navigation */}
-                 <div className="flex w-full max-w-xl gap-2 mb-4">
+                 <div className="flex flex-col w-full max-w-xl gap-2 mb-4">
                      <button 
                          onClick={handleNextStep}
                          disabled={salary <= 0}
-                         className={`flex-1 py-2.5 rounded-[12px] font-semibold text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 transition-all active:scale-95 ${salary > 0 ? 'bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'}`}
+                         className={`w-full py-2.5 rounded-[12px] font-semibold text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 transition-all active:scale-95 ${salary > 0 ? 'bg-[#007AFF] text-white hover:bg-[#0062cc] shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/60'}`}
                      >
                          <span>{lang === 'ar' ? 'إدخال المصروفات آليا' : 'Auto Setup Expenses'}</span>
                          {isRtl ? <ArrowLeft size={16} strokeWidth={1.5} /> : <ArrowRight size={16} strokeWidth={1.5} />}
@@ -587,7 +587,7 @@ function App() {
                          <button
                            onClick={() => setStep(AppStep.EXPENSES)}
                            disabled={salary <= 0}
-                           className={`flex-1 py-2.5 rounded-[12px] font-semibold text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 transition-all active:scale-95 border ${salary > 0 ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm' : 'bg-transparent border-slate-100/50 text-slate-300 cursor-not-allowed'}`}
+                           className={`w-full py-2.5 rounded-[12px] font-semibold text-[13px] sm:text-[14px] flex items-center justify-center gap-1.5 transition-all active:scale-95 border ${salary > 0 ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm' : 'bg-transparent border-slate-100/50 text-slate-300 cursor-not-allowed'}`}
                          >
                            {lang === 'ar' ? 'التخطي وإدخال المصروفات يدويا' : 'Skip & Enter Manually'}
                          </button>
@@ -761,14 +761,6 @@ function App() {
                     <span className="truncate">{lang === 'ar' ? 'السابق' : 'Prev'}</span>
                  </button>
                  
-                 <button
-                    onClick={() => setStep(AppStep.TOOLS)}
-                    className="flex-1 px-1 sm:px-4 py-2 bg-[#007AFF] text-white rounded-[12px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_4px_16px_rgba(0,122,255,0.2)] active:scale-95 text-[12px] sm:text-[14px] flex items-center justify-center gap-1 sm:gap-1.5"
-                 >
-                    <span className="truncate">{lang === 'ar' ? 'الأدوات' : 'Tools'}</span>
-                    {isRtl ? <ArrowLeft size={16} strokeWidth={1.5} /> : <ArrowRight size={16} strokeWidth={1.5} />}
-                 </button>
-
                  <button 
                     onClick={exportPDF}
                     disabled={isExporting}
@@ -776,6 +768,14 @@ function App() {
                  >
                     {isExporting ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full flex-shrink-0"></div> : <Download size={16} strokeWidth={1.5} className="flex-shrink-0" />}
                     <span className="truncate">{lang === 'ar' ? 'التقرير PDF' : 'PDF Report'}</span>
+                 </button>
+
+                 <button
+                    onClick={() => setStep(AppStep.TOOLS)}
+                    className="flex-1 px-1 sm:px-4 py-2 bg-[#007AFF] text-white rounded-[12px] font-semibold hover:bg-[#0062cc] transition-all shadow-[0_4px_16px_rgba(0,122,255,0.2)] active:scale-95 text-[12px] sm:text-[14px] flex items-center justify-center gap-1 sm:gap-1.5"
+                 >
+                    <span className="truncate">{lang === 'ar' ? 'الأدوات' : 'Tools'}</span>
+                    {isRtl ? <ArrowLeft size={16} strokeWidth={1.5} /> : <ArrowRight size={16} strokeWidth={1.5} />}
                  </button>
             </div>
 
