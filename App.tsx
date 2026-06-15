@@ -532,7 +532,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['Almarai',sans-serif] pb-12 sm:pb-14 relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 font-['Almarai',sans-serif] relative flex flex-col selection:bg-blue-100 selection:text-blue-800" dir={isRtl ? 'rtl' : 'ltr'}>
       {renderCategoryInfoModal()}
       <StickyHeader 
         salary={salary} 
@@ -912,7 +912,7 @@ function App() {
       {renderWarningModalContent()}
 
       {/* Persistent Footer - Centered always */}
-      <footer className="fixed bottom-0 w-full bg-white border-t border-slate-900/5 py-1 px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex justify-center items-center transition-all">
+      <footer className="w-full bg-white border-t border-slate-900/5 py-1 px-4 shadow-[0_-1px_3px_rgba(0,0,0,0.02)] z-40 flex justify-center items-center transition-all mt-auto mt-8 shrink-0 pb-safe">
         <div className="flex items-center gap-2.5 text-[12px] text-slate-500 font-medium bg-transparent px-2 py-0.5 rounded-full my-1">
            <span>{t.developedBy}</span>
            <a href="https://www.linkedin.com/in/ahmed-alshareef-innovation" target="_blank" rel="noopener noreferrer" className="opacity-90 hover:opacity-100 transition-opacity flex items-center">
